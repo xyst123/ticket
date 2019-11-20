@@ -1,0 +1,15 @@
+{
+  "name": "react-ssr",
+  "short_name": "react-ssr",
+  "icons": [{
+    "src": "/images/favicon.jpeg",
+    "sizes": "120x120",
+    "type": "image/jpeg"
+  }],
+  "start_url": "/",
+  "background_color": "#f2f3f5",
+  "theme_color": "#f60",
+  "orientation": "portrait-primary",
+  "display": "standalone",
+  "description": "react-ssr"
+}

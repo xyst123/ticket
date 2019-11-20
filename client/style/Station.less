@@ -1,0 +1,54 @@
+@import url(./vars.less);
+@header-height:40px;
+@button-margin:9px;
+@button-height:30px;
+.station{
+  background-color: #fff;
+  .station-content{
+    height: @popup-body-height;
+    overflow: scroll;
+    &-item{
+      text-align: left;
+      &-header{
+        line-height: @header-height;
+        font-size: @font-large;
+      }
+      &-character{
+        &-button{
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          width:35px;
+          height: @button-height;
+          margin:0 @button-margin @button-margin 0;
+          &:nth-child(8n){
+            margin-right: 0;
+          }
+        }
+      }
+      &-station{
+        overflow: hidden;
+        &__shrink{
+          height: 147px;
+        }
+        &-button{
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          width: 79px;
+          height: @button-height;
+          margin:0 @button-margin @button-margin 0;
+          &:nth-child(4n){
+            margin-right: 0;
+          }
+          &__active{
+            color: @subject-normal;
+            &:before{
+              border: 1px solid @subject-normal !important;
+            }
+          }
+        }
+      }
+    }
+  }
+}

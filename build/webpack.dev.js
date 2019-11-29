@@ -7,7 +7,7 @@ module.exports = merge(mainConfig, {
     contentBase: resolve('dist'),
     compress: true,
     stats: 'none',
-    port: 4000,
+    port: 5000,
     historyApiFallback: true,
   },
 });

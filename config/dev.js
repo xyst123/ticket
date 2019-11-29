@@ -3,7 +3,7 @@ const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const headerConfig = {
   12306: {
     host: 'kyfw.12306.cn',
-    referer: 'https://kyfw.12306.cn/otn',
+    referer: 'https://kyfw.12306.cn',
     origin: 'https://kyfw.12306.cn',
   },
 };
@@ -101,6 +101,41 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: {
           '^/otn/restTicket/query': '/otn/leftTicket/query',
+        },
+      },
+      '/otn/submitOrder': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/submitOrder': '/otn/leftTicket/submitOrderRequest',
+        },
+      },
+      '/otn/initOrder': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/initOrder': '/otn/confirmPassenger/initDc',
+        },
+      },
+      '/otn/checkOrder': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/checkOrder': '/otn/confirmPassenger/checkOrderInfo',
+        },
+      },
+      '/otn/countOrder': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/countOrder': '/otn/confirmPassenger/getQueueCount',
+        },
+      },
+      '/otn/confirmOrder': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/confirmOrder': '/otn/confirmPassenger/confirmSingleForQueue',
         },
       },
     },

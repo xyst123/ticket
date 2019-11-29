@@ -5,7 +5,7 @@ import { NavBar,Icon,List,Checkbox, } from 'antd-mobile';
 import TicketItem from '../components/TicketItem';
 import { getTickets } from '../service/ticket'
 import {dateFormat} from '../utils/index';
-import '../style/Login.less';
+import '../style/Ticket.less';
 
 const CheckboxItem = Checkbox.CheckboxItem;
 
@@ -27,7 +27,6 @@ function Ticket({history}) {
         'leftTicketDTO.train_date':dateFormat(currentDate,'yyyy-MM-dd'),
         'leftTicketDTO.from_station':currentStation.from.id,
         'leftTicketDTO.to_station':currentStation.to.id,
-        'purpose_codes':'ADULT',
       });
       if(getTicketsRes){
         setTickets(getTicketsRes)
@@ -42,7 +41,7 @@ function Ticket({history}) {
   const handleSelect=(ticket)=>{
     let existIndex=-1;
     currentSelectedTickets.forEach((currentSelectedTicket,index)=>{
-      if(currentSelectedTicket.allEncStr===ticket.allEncStr){
+      if(currentSelectedTicket.id===ticket.id){
         existIndex=index
       }
     });
@@ -62,11 +61,11 @@ function Ticket({history}) {
         mode="dark"
         icon={<Icon onClick={()=>{history.goBack()}} type="left"/>}
         rightContent={[
-          <p key="finish" onClick={()=>{dispatch({type:"SELECTED_Tickets_CHANGE",payload:currentSelectedTickets});history.goBack()}}>完成</p>
+          <p key="finish" onClick={()=>{dispatch({type:"SELECTED_TICKETS_CHANGE",payload:currentSelectedTickets});history.goBack()}}>完成</p>
         ]}>选择车次
       </NavBar>
       <List className="ticket-list">
-        {tickets.map(ticket=>(<CheckboxItem key={`ticket-${ticket.allEncStr}`} defaultChecked={shouldInitialSelect(ticket)} onChange={() => handleSelect(ticket)}>
+        {tickets.map(ticket=>(<CheckboxItem key={`ticket-${ticket.id}`} defaultChecked={shouldInitialSelect(ticket)} onChange={() => handleSelect(ticket)}>
           <TicketItem ticket={ticket}/>
         </CheckboxItem>))}
       </List>

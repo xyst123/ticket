@@ -39,7 +39,7 @@ const handleStationString=(stationString:string)=>{
   return {stations,stationMap,characterStationMap,characterStations}
 }
 
-export const {stations,stationMap,characterStationMap,characterStations}=handleStationString(window.station_names);
+export const {stations,stationMap,characterStationMap,characterStations}=handleStationString((window as any).station_names);
 
 export const getStationById=(id)=>stationMap[id]||{}
 

@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import {  withRouter } from 'react-router-dom';
 import { WingBlank,InputItem, Button } from 'antd-mobile';
-import { login } from '../service/passport'
+import { getCookie,login } from '../service/passport'
 import '../style/Login.less';
 import '../../server/static/js/cookie.js';
-
 
 function Login({history}) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getCookie()
+  },[]);
 
   const handleLogin = async () => {
     setLoading(true);

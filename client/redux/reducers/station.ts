@@ -10,13 +10,15 @@ const types = {
 export function station(state = {from:getStationById('BJP'),to:getStationById('SHH')}, action) {
   switch (action.type) {
     case types.FROM_STATION_CHANGE:
-      return Object.assign({},state,{
+      return {
+        ...state,
         from: action.payload
-      })
+      }
     case types.TO_STATION_CHANGE:
-      return Object.assign({},state,{
+      return {
+        ...state,
         to: action.payload
-      })
+      }
     case types.STATION_TOGGLE:
       return {
         from:state.to,

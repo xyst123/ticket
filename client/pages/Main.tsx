@@ -2,10 +2,12 @@ import React, { useState,useRef } from 'react';
 import {  withRouter,Link } from 'react-router-dom';
 import { useSelector } from 'react-redux'
 import { WingBlank,WhiteSpace,Card,Icon, Button,Modal,NavBar } from 'antd-mobile';
+import TicketItem from '../components/TicketItem';
 import PersonItem from '../components/PersonItem';
 import Station from './Station';
 import Date from './Date';
 import Passenger from './Passenger';
+import {submitOrder} from '../service/order'
 import {dateFormat} from '../utils/index';
 import '../style/Main.less';
 
@@ -19,6 +21,7 @@ function Main ({history}) {
 
   const currentStation = useSelector(state => state.station);
   const currentDate = useSelector(state => state.date);
+  const selectedTickets = useSelector(state => state.selectedTickets)
   const selectedPassengers = useSelector(state => state.selectedPassengers);
 
   const handleShowStation=(type)=>{
@@ -26,8 +29,32 @@ function Main ({history}) {
     setShowStation(true)
   }
 
+  const submit=()=>{
+    let timer;
+    const autoGetAvailableTickets=()=>{
+      timer=setInterval(async()=>{
+        const getTicketsRes = await getTickets({
+          'leftTicketDTO.train_date':dateFormat(currentDate,'yyyy-MM-dd'),
+          'leftTicketDTO.from_station':currentStation.from.id,
+          'leftTicketDTO.to_station':currentStation.to.id,
+        });
+        const res=await submitOrder({
+          tickets:selectedTickets,
+          date:currentDate,
+          passengers:selectedPassengers,
+          seats:['M','0','1','3']
+        });
+        if(res){
+          clearInterval(timer);
+          timer=null;
+        }
+      },5000)
+    }
+    autoGetAvailableTickets()
+  }
+
   return (
-    <WingBlank className="otn">
+    <WingBlank className="main">
       <Card>
         <Card.Header
           title="基本信息"
@@ -35,9 +62,12 @@ function Main ({history}) {
           extra={<Icon type="right" />}
         />
         <Card.Body>
-          <h3 onClick={handleShowStation.bind(null,'from')}>{currentStation.from.chinese || '出发地'}</h3>
-          <h3 onClick={handleShowStation.bind(null,'to')}>{currentStation.to.chinese || '目的地'}</h3>
+          <div className="main-basic-station">
+            <h3 onClick={handleShowStation.bind(null,'from')}>{currentStation.from.chinese || '出发地'}</h3>
+            <h3 onClick={handleShowStation.bind(null,'to')}>{currentStation.to.chinese || '目的地'}</h3>
+          </div>
           <p onClick={setShowDate.bind(null,true)}>{dateFormat(currentDate,'yyyy-MM-dd')}</p>
+          {selectedTickets.map(selectedTicket=>(<TicketItem key={`ticket-${selectedTicket.id}`} ticket={selectedTicket} brief/>))}
           <Button type="primary" onClick={()=>{history.push('/ticket')}}>选择车次</Button>
         </Card.Body>
       </Card>
@@ -97,7 +127,7 @@ function Main ({history}) {
 
       <WhiteSpace size="lg"/>
 
-      <Link to="/otn/login">
+      <Link to="/login">
         <Card>
           <Card.Header
             title="配置"
@@ -109,6 +139,7 @@ function Main ({history}) {
           </Card.Body>
         </Card>
       </Link>
+      <Button type="primary" onClick={submit}>开始抢票</Button>
     </WingBlank>
   );
 }

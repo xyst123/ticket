@@ -16,24 +16,25 @@ export async function getPassengers() {
     })
     if(handleRes(res,message)){
       return res.data.datas.map(data=>{
-        return Object.assign({
+        return {
+          ...data,
           passengerTicketStr:[
-            null,
-            data.passenger_flag,
+            0,
             data.passenger_type,
             data.passenger_name,
-            null,
+            data.passenger_id_type_code,
             data.passenger_id_no,
             data.mobile_no,
-            null,
+            'N',
             data.allEncStr
           ].join(','),
           oldPassengerStr:[
             data.passenger_name,
-            null,
+            data.passenger_id_type_code,
             data.passenger_id_no,
-            null]
-        },data)
+            '1_'
+          ].join(',')
+        }
       })
     }
     window.location.href="/login";

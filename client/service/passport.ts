@@ -1,5 +1,14 @@
-import { request, get, handleRes } from "../utils";
+import { request, get, handleRes } from "../utils/index";
 import validate from "../utils/validate";
+
+export function getCookie(){
+  request({
+    url: '/otn/api/cookie/bigIpServerOtn'
+  });
+  request({
+    url: '/otn/api/cookie/route'
+  });
+}
 
 export async function login(username: string, password: string) {
   const message = {
@@ -38,12 +47,6 @@ export async function login(username: string, password: string) {
       '8': '253,116',
     }
       try {
-          await request({
-            url: '/otn/api/cookie/bigIpServerOtn'
-          });
-          await request({
-            url: '/otn/api/cookie/route'
-          });
           const authCodeRes = await request({
             url: '/passport/api/authCode',
             data: {

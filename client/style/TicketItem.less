@@ -1,0 +1,57 @@
+@import url(./vars.less);
+.ticket-item{
+  display: flex;
+  align-items: center;
+  &__brief{
+    display: flex;
+    
+  }
+  &-station{
+    width:88px;
+    &__left{
+      .ticket-item-station-time{
+        color:@subject-normal;
+      }
+    }
+    &__right{
+      text-align: right;
+    }
+    &-time{
+      font-size:@font-larger;
+      line-height: 18px;
+    }
+    &-name{
+      font-size:@font-small;
+    }
+  }
+  &-duration{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width:58px;
+    font-size:@font-small;
+    color: @gray1;
+    &-line{
+      width:100%;
+      border-top:1px solid @gray1;;
+    }
+  }
+  &-seat{
+    display: flex;
+    flex-wrap: wrap;
+    margin-top:4px;
+    font-size: @font-smaller;
+    line-height: 14px;
+    color: @gray1;
+    p{
+      width:60px;
+      margin-right: 35px;
+      &:nth-child(3n){
+        margin-right: 0;
+      }
+    }
+    &__available{
+      color: @subject-normal
+    }
+  }
+}

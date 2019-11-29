@@ -127,8 +127,8 @@ const baseConfig = {
 };
 
 const styleLoaders = [{ loader: 'css-loader' },
-{ loader: 'postcss-loader' },
-{ loader: 'less-loader' }];
+  { loader: 'postcss-loader' },
+  { loader: 'less-loader' }];
 if (envBuildConfig.extract) {
   styleLoaders.unshift({ loader: MiniCssExtractPlugin.loader });
   baseConfig.plugins.push(new MiniCssExtractPlugin({

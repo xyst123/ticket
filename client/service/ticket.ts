@@ -1,13 +1,21 @@
-import { request, handleRes } from "../utils";
+import { request, handleRes } from "../utils/index";
 
-export async function getTickets(data) {
+interface GetTicketsData {
+  'leftTicketDTO.train_date':string,
+  'leftTicketDTO.from_station':string,
+  'leftTicketDTO.to_station':string
+}
+export async function getTickets(data:GetTicketsData) {
   const message = {
     '-1': '获取车次列表失败'
   }
   try {
     const res = await request({
       url: '/otn/restTicket/query',
-      data
+      data:{
+        ...data,
+        'purpose_codes':'ADULT',
+      }
     })
     if(handleRes(res,message)){
       const {map,result}=res.data;
@@ -25,7 +33,7 @@ export async function getTickets(data) {
           toName:map[ticketArray[7]],
           fromTime:ticketArray[8],
           toTime:ticketArray[9],
-          during:ticketArray[10],
+          duration:ticketArray[10],
           available:ticketArray[11],
           leftTicketStr:ticketArray[12],
           date:ticketArray[13],
@@ -74,7 +82,7 @@ export async function getTickets(data) {
               name:'其他',
               number:ticketArray[22]
             },
-          ].filter(seat=>seat.number)
+          ].filter(seat=> seat.number)
         }
       })
     }

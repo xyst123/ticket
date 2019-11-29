@@ -31,7 +31,7 @@ export const get = (object, props: string, defaultValue) => {
       return [].concat(curObject);
     }
     if (curObject instanceof Object) {
-      return Object.assign({}, curObject);
+      return {...curObject};
     }
     return curObject;
   }, object);
@@ -58,7 +58,7 @@ export const request = ({
     params: realParams,
     headers
   };
-  return new Promise((resolve) => {
+  return new Promise<any>((resolve) => {
     axios(options).then((res) => {
       resolve(res.data);
     }).catch((error) => {
@@ -67,11 +67,7 @@ export const request = ({
   });
 };
 
-interface Message {
-  success?: string;
-  fail?: string;
-}
-export const handleRes = (res, message: Message = {}, successCallback, failCallback): boolean => {
+export const handleRes = (res, message = {}, successCallback?, failCallback?): boolean => {
   if(res.httpstatus===200){
     res.result_code='0'
   }

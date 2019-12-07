@@ -4,9 +4,9 @@ import {
   Switch,
   Route,
 } from 'react-router-dom';
-import Main from '../pages/Main';
-import Login from '../pages/Login';
-import Ticket from '../pages/Ticket';
+import Main from '@/pages/Main';
+import Login from '@/pages/Login';
+import Ticket from '@/pages/Ticket';
 
 export const routes = [
   {
@@ -15,7 +15,7 @@ export const routes = [
   }, {
     path: '/login',
     component: Login,
-  },{
+  }, {
     path: '/ticket',
     component: Ticket,
   }

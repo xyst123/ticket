@@ -1,4 +1,4 @@
-import { request, handleRes } from "../utils";
+import { request, handleRes } from "@/utils";
 
 export async function getPassengers() {
   const message = {
@@ -11,14 +11,14 @@ export async function getPassengers() {
       type: 'form',
       data: {
         pageIndex: 1,
-        pageSize:15
+        pageSize: 15
       }
     })
-    if(handleRes(res,message)){
-      return res.data.datas.map(data=>{
+    if (handleRes(res, message)) {
+      return res.data.datas.map(data => {
         return {
           ...data,
-          passengerTicketStr:[
+          passengerTicketStr: [
             0,
             data.passenger_type,
             data.passenger_name,
@@ -28,7 +28,7 @@ export async function getPassengers() {
             'N',
             data.allEncStr
           ].join(','),
-          oldPassengerStr:[
+          oldPassengerStr: [
             data.passenger_name,
             data.passenger_id_type_code,
             data.passenger_id_no,
@@ -37,7 +37,7 @@ export async function getPassengers() {
         }
       })
     }
-    window.location.href="/login";
+    window.location.href = "/login";
     return false
   } catch (error) {
     return handleRes(error, message)

@@ -1,4 +1,4 @@
-const getStrLen = (str) => {
+const getStrLen = (str: string) => {
   let length = 0;
   let strCode;
   for (let i = 0; i < str.length; i += 1) {
@@ -16,8 +16,19 @@ const getStrLen = (str) => {
   return length;
 };
 
+interface IRule {
+  rule: string,
+  backData?: Object,
+  options?: Object
+}
+interface IValidate {
+  id?: string,
+  value: any,
+  rules: IRule[]
+}
+
 export default {
-  isType(data, options) {
+  isType(data: any, options) {
     const { type } = options;
     const realType = Object.prototype.toString.call(data);
     return { pass: realType.toLowerCase() === (`[object ${type}]`).toLowerCase() };
@@ -85,22 +96,23 @@ export default {
     };
     return { pass: Boolean(testMap[type] ? testMap[type](data) : false) };
   },
-  isEmail(data) {
+  isEmail(data: any) {
     const email = String(data);
     const rs = /^[^@]+@[^@]+$/.test(email);
     return { pass: rs };
   },
-  isNotNaN(data) {
+  isNotNaN(data: any) {
     return { pass: !Number.isNaN(data) };
   },
-  isExist(data) {
+  isExist(data: any) {
     return { pass: Boolean(data) };
   },
-  userDefine(data, options) {
+  userDefine(data: any, options) {
     const { fn } = options;
     return { pass: fn && typeof fn === 'function' ? fn(data) : false };
   },
-  check(validates = []) {
+
+  check(validates: IValidate[] = []) {
     const rs = {
       pass: true,
       errors: {},

@@ -1,7 +1,7 @@
-import { request, get, handleRes } from "../utils/index";
-import validate from "../utils/validate";
+import { request, get, handleRes, getType } from "@/utils";
+import validate from "@/utils/validate";
 
-export function getCookie(){
+export function getCookie() {
   request({
     url: '/otn/api/cookie/bigIpServerOtn'
   });
@@ -13,7 +13,7 @@ export function getCookie(){
 export async function login(username: string, password: string) {
   const message = {
     '-1': '登录失败',
-    '1':'账号与密码不匹配'
+    '1': '账号与密码不匹配'
   }
   const passRes = validate.check([
     {
@@ -46,93 +46,94 @@ export async function login(username: string, password: string) {
       '7': '181,116',
       '8': '253,116',
     }
-      try {
-          const authCodeRes = await request({
-            url: '/passport/api/authCode',
-            data: {
-              callback: '',
-              rand: 'sjrand',
-              login_site: 'E',
-              _: Date.now(),
-              module:'login'
-            }
-          })
-          let authCode ;
-          authCodeRes.replace(/"image":"(\S+)","result_message"/,(...args)=>{
-            authCode=args[1]
-          });
-          const bytes = window.atob(authCode);
-          const arrayBuffer = new ArrayBuffer(bytes.length);
-          const arr = new Uint8Array(arrayBuffer);
-          for (let i = 0; i < bytes.length; i++) {
-            arr[i] = bytes.charCodeAt(i);
-          }
-          const blob = new Blob([arr], { type: "image/jpg" });
-          const formData = new FormData();
-          formData.append("pic_xxfile", blob, Date.now() + ".jpg");
-          const positionRes = await request({
-            method: 'POST',
-            url: '/passport/api/position',
-            data: formData,
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-          const chosenIndexes = positionRes.match(/<b>([1-8\s]+)<\/b>/i)[1];
-          const authCodeAnswer = chosenIndexes.split(" ").map(chosenIndex => points[chosenIndex]).join(',');
-          const checkAuthCodeAnswerRes = await request({
-            url: '/passport/api/checkAuthCodeAnswer',
-            data: {
-              callback: '',
-              answer: authCodeAnswer,
-              rand: 'sjrand',
-              login_site: 'E',
-              _: Date.now()
-            }
-          })
-          if (!checkAuthCodeAnswerRes.includes('"result_code":"4"')) {
-            throw new Error('验证码校验失败')
-          }
-          const loginRes = await request({
-            method: 'POST',
-            url: '/passport/api/login',
-            type: 'form',
-            data: {
-              username, password, appid: 'otn', answer: authCodeAnswer
-            }
-          })
-          if(handleRes(loginRes,message)){
-            await request({
-              url: '/otn/api/cookie/jSessionId'
-            });
-            const getTkRes= await request({
-              method: 'POST',
-              url: '/passport/api/cookie/getTk',
-              type: 'form',
-              data: {
-                appid: 'otn'
-              }
-            });
-            if(handleRes(getTkRes,message)){
-              const tk=getTkRes.newapptk;
-              const setTkRes= await request({
-                method: 'POST',
-                url: '/passport/api/cookie/setTk',
-                type: 'form',
-                data: {
-                  tk
-                }
-              }); 
-              return handleRes(setTkRes,message)
-            }else {
-              return false
-            }  
-          }else {
-            return false
-          }  
-      } catch (error) {
-        return handleRes(error,message)
+    try {
+      const authCodeRes = await request({
+        url: '/passport/api/authCode',
+        data: {
+          callback: '',
+          rand: 'sjrand',
+          login_site: 'E',
+          _: Date.now(),
+          module: 'login'
+        }
+      })
+      let authCode: string = "";
+      authCodeRes.replace(/"image":"(\S+)","result_message"/, (...args: any[]) => {
+        [, authCode] = args
+      });
+      const bytes = window.atob(authCode);
+      const arrayBuffer = new ArrayBuffer(bytes.length);
+      const arr = new Uint8Array(arrayBuffer);
+      for (let i = 0; i < bytes.length; i += 1) {
+        arr[i] = bytes.charCodeAt(i);
       }
+      const blob = new Blob([arr], { type: "image/jpg" });
+      const formData = new FormData();
+      formData.append("pic_xxfile", blob, Date.now() + ".jpg");
+      const positionRes = await request({
+        method: 'POST',
+        url: '/passport/api/position',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      const chosenIndexes = positionRes.match(/<b>([1-8\s]+)<\/b>/i)[1];
+      const authCodeAnswer = chosenIndexes.split(" ").map(chosenIndex => points[chosenIndex]).join(',');
+      const checkAuthCodeAnswerRes = await request({
+        url: '/passport/api/checkAuthCodeAnswer',
+        data: {
+          callback: '',
+          answer: authCodeAnswer,
+          rand: 'sjrand',
+          login_site: 'E',
+          _: Date.now()
+        }
+      })
+      if (!checkAuthCodeAnswerRes.includes('"result_code":"4"')) {
+        throw new Error('验证码校验失败')
+      }
+
+      const loginRes = await request({
+        method: 'POST',
+        url: '/passport/api/login',
+        type: 'form',
+        data: {
+          username, password, appid: 'otn', answer: authCodeAnswer
+        }
+      })
+      if (!handleRes(loginRes)) {
+        throw new Error('登录失败')
+      }
+
+      await request({
+        url: '/otn/api/cookie/jSessionId'
+      });
+      const getTkRes = await request({
+        method: 'POST',
+        url: '/passport/api/cookie/getTk',
+        type: 'form',
+        data: {
+          appid: 'otn'
+        }
+      });
+      if (!handleRes(getTkRes)) {
+        throw new Error('获取tk失败')
+      }
+
+      const tk = getTkRes.newapptk;
+      const setTkRes = await request({
+        method: 'POST',
+        url: '/passport/api/cookie/setTk',
+        type: 'form',
+        data: {
+          tk
+        }
+      });
+      return handleRes(setTkRes, message)
+    } catch (error) {
+      return handleRes(error, message)
+    }
   } else {
     return handleRes(false, {
       '-1': get(passRes, "firstError.backData.message", message['-1'])

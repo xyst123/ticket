@@ -4,7 +4,7 @@ import '@/style/PassengerItem.less';
 interface IProp {
   passenger: Passenger.IPassenger
 }
-function PersonItem({ passenger }: IProp) {
+function PassengerItem({ passenger }: IProp) {
   const getAvatar = (name: string) => {
     if (name.length > 2) {
       return name.substring(name.length - 2)
@@ -22,4 +22,4 @@ function PersonItem({ passenger }: IProp) {
   );
 }
 
-export default PersonItem
+export default PassengerItem

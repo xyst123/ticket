@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { NavBar, Icon, List, Checkbox, } from 'antd-mobile';
+import { NavBar, Icon, List, Checkbox } from 'antd-mobile';
 import TicketItem from '@/components/TicketItem';
 import { getTickets } from '@/service/ticket'
+import { autoLogin } from '@/service/passport';
 import { dateFormat } from '@/utils';
 import '@/style/Ticket.less';
 
@@ -26,15 +27,25 @@ function Ticket({ history }: IProp) {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      const getTicketsRes = await getTickets({
-        'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
-        'leftTicketDTO.from_station': currentStation.from.id,
-        'leftTicketDTO.to_station': currentStation.to.id,
-      });
-      if (getTicketsRes) {
-        setTickets(getTicketsRes)
+      const handleGetTickets = async () => {
+        const getTicketsRes = await getTickets({
+          'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
+          'leftTicketDTO.from_station': currentStation.from.id,
+          'leftTicketDTO.to_station': currentStation.to.id,
+        });
+        if (getTicketsRes.status) {
+          setTickets(getTicketsRes.data);
+        } else {
+          const autoLoginRes = await autoLogin();
+          if (autoLoginRes) {
+            await handleGetTickets()
+          } else {
+            history.push('/login')
+          }
+        }
       }
+      setLoading(true);
+      await handleGetTickets();
       setLoading(false);
     };
     fetchData();

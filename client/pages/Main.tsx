@@ -7,9 +7,11 @@ import PassengerItem from '@/components/PassengerItem';
 import Station from '@/pages/Station';
 import Date from '@/pages/Date';
 import Passenger from './Passenger';
-import { submitOrder } from '@/service/order'
+import { getTickets } from '@/service/ticket'
+// import { submitOrder } from '@/service/order'
 import { dateFormat } from '@/utils';
 import '@/style/Main.less';
+import { clearInterval } from 'timers';
 
 interface IProp {
   history: any
@@ -26,12 +28,19 @@ function Main({ history }: IProp) {
   const currentStation = useSelector((state: any) => state.station);
   const currentDate = useSelector((state: any) => state.date);
   const selectedTickets: Ticket.ITicket[] = useSelector((state: any) => state.selectedTickets)
+  const selectedSeats: Seat.ISeat[] = useSelector((state: any) => state.selectedSeats)
   const selectedPassengers: Passenger.IPassenger[] = useSelector((state: any) => state.selectedPassengers);
 
   const handleShowStation = (type: string) => {
     setCurrentStationType(type);
     setShowStation(true)
   }
+
+  const getMatchedTickets = (allTickets: Ticket.ITicket[]) => allTickets.filter(allTicket => {
+    const ticketFit = Boolean(selectedTickets.filter(selectedTicket => selectedTicket.id === allTicket.id).length)
+    const seatFit = Boolean(selectedSeats.filter(selectedSeat => allTicket[selectedSeat]).length)
+    return ticketFit && seatFit
+  })
 
   const submit = () => {
     let timer: any;
@@ -42,15 +51,11 @@ function Main({ history }: IProp) {
           'leftTicketDTO.from_station': currentStation.from.id,
           'leftTicketDTO.to_station': currentStation.to.id,
         });
-        const res = await submitOrder({
-          tickets: selectedTickets,
-          date: currentDate,
-          passengers: selectedPassengers,
-          seats: ['M', '0', '1', '3']
-        });
-        if (res) {
-          clearInterval(timer);
-          timer = null;
+        console.log(222, getTicketsRes)
+        if (Array.isArray(getTicketsRes) && getMatchedTickets(getTicketsRes, selectedTickets, "id")) {
+          clearInterval(timer)
+          const matchedTickets = getMatchedTickets(getTicketsRes, selectedTickets, "id");
+          console.log()
         }
       }, 5000)
     }

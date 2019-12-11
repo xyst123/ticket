@@ -24,40 +24,40 @@ module.exports = {
     // TODO
     autoOpen: true,
     proxy: {
-      '/otn/api/cookie/bigIpServerOtn': {
+      '/otn/cookie/bigIpServerOtn': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/cookie/bigIpServerOtn': '/otn/HttpZF/GetJS',
+          '^/otn/cookie/bigIpServerOtn': '/otn/HttpZF/GetJS',
         },
       },
-      '/otn/api/cookie/route': {
+      '/otn/cookie/route': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/cookie/route': '/otn/index12306/getLoginBanner',
+          '^/otn/cookie/route': '/otn/index12306/getLoginBanner',
         },
       },
-      '/otn/api/cookie/jSessionId': {
+      '/otn/cookie/jSessionId': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/cookie/jSessionId': '/otn/passport?redirect=/otn/login/userLogin',
+          '^/otn/cookie/jSessionId': '/otn/passport?redirect=/otn/login/userLogin',
         },
       },
-      '/passport/api/cookie/getTk': {
+      '/passport/cookie/getTk': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/passport/api/cookie/getTk': '/passport/web/auth/uamtk',
+          '^/passport/cookie/getTk': '/passport/web/auth/uamtk',
         },
         headers: headerConfig['12306'],
       },
-      '/passport/api/cookie/setTk': {
+      '/passport/cookie/setTk': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/passport/api/cookie/setTk': '/otn/uamauthclient',
+          '^/passport/cookie/setTk': '/otn/uamauthclient',
         },
         headers: headerConfig['12306'],
       },
@@ -96,46 +96,46 @@ module.exports = {
           '^/otn/api/passenger/query': '/otn/passengers/query',
         },
       },
-      '/otn/restTicket/query': {
+      '/otn/api/restTicket/query': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/restTicket/query': '/otn/leftTicket/query',
+          '^/otn/api/restTicket/query': '/otn/leftTicket/query',
         },
       },
-      '/otn/submitOrder': {
+      '/otn/api/submitOrder': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/submitOrder': '/otn/leftTicket/submitOrderRequest',
+          '^/otn/api/submitOrder': '/otn/leftTicket/submitOrderRequest',
         },
       },
-      '/otn/initOrder': {
+      '/otn/api/initOrder': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/initOrder': '/otn/confirmPassenger/initDc',
+          '^/otn/api/initOrder': '/otn/confirmPassenger/initDc',
         },
       },
-      '/otn/checkOrder': {
+      '/otn/api/checkOrder': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/checkOrder': '/otn/confirmPassenger/checkOrderInfo',
+          '^/otn/api/checkOrder': '/otn/confirmPassenger/checkOrderInfo',
         },
       },
-      '/otn/countOrder': {
+      '/otn/api/countOrder': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/countOrder': '/otn/confirmPassenger/getQueueCount',
+          '^/otn/api/countOrder': '/otn/confirmPassenger/getQueueCount',
         },
       },
-      '/otn/confirmOrder': {
+      '/otn/api/confirmOrder': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/confirmOrder': '/otn/confirmPassenger/confirmSingleForQueue',
+          '^/otn/api/confirmOrder': '/otn/confirmPassenger/confirmSingleForQueue',
         },
       },
     },

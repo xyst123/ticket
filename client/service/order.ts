@@ -6,7 +6,7 @@ interface IData {
   passengers: Passenger.IPassenger[],
 }
 
-export async function submitOrder(data: IData) {
+export const submitOrder = async (data: IData): Promise<Common.IRes> => {
   const message = {
     'success': '提交订单成功',
     '-1': '提交订单失败'
@@ -16,7 +16,7 @@ export async function submitOrder(data: IData) {
     const ticket = tickets[0];
     const submitRes = await request({
       method: 'POST',
-      url: '/otn/submitOrder',
+      url: '/otn/api/submitOrder',
       type: 'form',
       data: {
         secretStr: ticket.secretStr,
@@ -34,7 +34,7 @@ export async function submitOrder(data: IData) {
     }
 
     const initRes = await request({
-      url: '/otn/initOrder',
+      url: '/otn/api/initOrder',
     })
     let token = '';
     let info = null;
@@ -53,7 +53,7 @@ export async function submitOrder(data: IData) {
 
     const checkRes = await request({
       method: 'POST',
-      url: '/otn/checkOrder',
+      url: '/otn/api/checkOrder',
       type: 'form',
       data: {
         passengerTicketStr: passengers.map(passenger => `${availableSeats[0].id},${passenger.passengerTicketStr}`).join('_'),
@@ -78,7 +78,7 @@ export async function submitOrder(data: IData) {
     const keyCheck = get(info, 'key_check_isChange', '');
     const countRes = await request({
       method: 'POST',
-      url: '/otn/countOrder',
+      url: '/otn/api/countOrder',
       type: 'form',
       data: {
         train_date: date.toString(),
@@ -100,7 +100,7 @@ export async function submitOrder(data: IData) {
 
     const confirmRes = await request({
       method: 'POST',
-      url: '/otn/confirmOrder',
+      url: '/otn/api/confirmOrder',
       type: 'form',
       data: {
         passengerTicketStr: passengers.map(passenger => `${availableSeats[0].id},${passenger.passengerTicketStr}`).join('_'),

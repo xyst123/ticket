@@ -42,4 +42,24 @@ declare namespace Ticket {
 	}
 }
 
+declare namespace Seat {
+	interface ISeat { [key: string]: string }
+}
+
+declare namespace User {
+	interface IUser {
+		username: string,
+		password: string
+	}
+}
+
+declare namespace Common {
+	interface IRes {
+		status: boolean,
+		code: number,
+		message: string,
+		data: any
+	}
+}
+
 

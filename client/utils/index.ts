@@ -1,6 +1,5 @@
 import axios from "axios";
 import qs from 'qs';
-import { Toast } from 'antd-mobile';
 
 export const iterateObject = (object: { [key: string]: any }, handler: (value?: any, key?: string | number, object?: object) => void) => {
   const keys = Object.keys(object);
@@ -67,29 +66,36 @@ export const request = ({
   });
 };
 
+interface IRes {
+  status: boolean,
+  code: number,
+  message: string
+}
 
-export const handleRes = (res, message = {}, successCallback?, failCallback?): boolean => {
+export const handleRes = (res: any, message = {}): IRes => {
   if (res.httpstatus === 200) {
     res.result_code = '0'
   }
   const code = parseInt(get(res, "result_code", "-1"))
   if (code === 0) {
     const { success } = message;
-    if (success) {
-      Toast.success(success, 3, successCallback);
-    }
-    return true;
+    return {
+      status: true,
+      code,
+      message: success || ""
+    };
   }
   console.error(res);
-  const failMessage = message[code];
-  if (failMessage) {
-    Toast.fail(failMessage, 3, failCallback);
-  }
-  return false;
+  const fail = message[code];
+  return {
+    status: false,
+    code,
+    message: fail || ""
+  };
 }
 
-const add0 = number => (number < 10 ? `0${number}` : number);
-export const dateFormat = (date, format = 'yyyy-MM-dd HH:mm:ss') => {
+const add0 = (number: number) => (number < 10 ? `0${number}` : number);
+export const dateFormat = (date: Date, format = 'yyyy-MM-dd HH:mm:ss') => {
   const [yyyy, MM, dd, HH, mm, ss] = [date.getFullYear(), add0(date.getMonth() + 1), add0(date.getDate()), add0(date.getHours()), add0(date.getMinutes()), add0(date.getSeconds())];
   const dateMap = {
     yyyy,

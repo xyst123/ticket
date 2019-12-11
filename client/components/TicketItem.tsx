@@ -1,4 +1,5 @@
 import React from 'react';
+import { seatMap } from '@/config/seat'
 import '@/style/TicketItem.less';
 
 interface IProp {
@@ -6,7 +7,7 @@ interface IProp {
   brief?: boolean
 }
 
-function PersonItem({ ticket, brief = false }: IProp) {
+function TicketItem({ ticket, brief = false }: IProp) {
   return brief ?
     (
       <div className="ticket-item__brief">
@@ -33,12 +34,14 @@ function PersonItem({ ticket, brief = false }: IProp) {
           </div>
         </div>
         <div className="ticket-item-seat">
-          {ticket.seats.map(seat => (
-            <p>
+          {Object.keys(ticket.seats).filter(seatId => {
+            return ticket.seats[seatId]
+          }).map(seatId => (
+            <p key={`seat-${seatId}`}>
               <span>
-                {seat.name}
+                {`${seatMap[seatId]}：`}
               </span>
-              <span className={seat.number === '无' ? '' : 'ticket-item-seat__available'}>{seat.number}</span>
+              <span className={ticket.seats[seatId] === '无' ? '' : 'ticket-item-seat__available'}>{ticket.seats[seatId]}</span>
             </p>
           ))}
         </div>
@@ -46,4 +49,4 @@ function PersonItem({ ticket, brief = false }: IProp) {
     );
 }
 
-export default PersonItem
+export default TicketItem

@@ -1,16 +1,16 @@
-import { request, get, handleRes, getType } from "@/utils";
+import { request, get, handleRes, getStorage, setStorage } from "@/utils";
 import validate from "@/utils/validate";
 
 export function getCookie() {
   request({
-    url: '/otn/api/cookie/bigIpServerOtn'
+    url: '/otn/cookie/bigIpServerOtn'
   });
   request({
-    url: '/otn/api/cookie/route'
+    url: '/otn/cookie/route'
   });
 }
 
-export async function login(username: string, password: string) {
+export const login = async (username: string, password: string): Promise<Common.IRes> => {
   const message = {
     '-1': '登录失败',
     '1': '账号与密码不匹配'
@@ -54,7 +54,7 @@ export async function login(username: string, password: string) {
           rand: 'sjrand',
           login_site: 'E',
           _: Date.now(),
-          module: 'login'
+          module: 'login',
         }
       })
       let authCode: string = "";
@@ -102,41 +102,91 @@ export async function login(username: string, password: string) {
           username, password, appid: 'otn', answer: authCodeAnswer
         }
       })
-      if (!handleRes(loginRes)) {
-        throw new Error('登录失败')
+      const checkLoginRes = handleRes(loginRes, message)
+      if (!checkLoginRes.status) {
+        return checkLoginRes
       }
 
       await request({
-        url: '/otn/api/cookie/jSessionId'
+        url: '/otn/cookie/jSessionId'
       });
+
       const getTkRes = await request({
         method: 'POST',
-        url: '/passport/api/cookie/getTk',
+        url: '/passport/cookie/getTk',
         type: 'form',
         data: {
           appid: 'otn'
         }
       });
-      if (!handleRes(getTkRes)) {
-        throw new Error('获取tk失败')
+      const checkGetTkRes = handleRes(getTkRes, Object.assign({}, message, {
+        '-1': '获取tk失败'
+      }));
+      if (!checkGetTkRes.status) {
+        return checkLoginRes
       }
 
       const tk = getTkRes.newapptk;
       const setTkRes = await request({
         method: 'POST',
-        url: '/passport/api/cookie/setTk',
+        url: '/passport/cookie/setTk',
         type: 'form',
         data: {
           tk
         }
       });
-      return handleRes(setTkRes, message)
+      const checkSetTkRes = handleRes(setTkRes, message)
+      if (checkSetTkRes.status) {
+        const users: User.IUser[] = getStorage('users') || [];
+        let existIndex = -1;
+        users.forEach((user, index: number) => {
+          if (user.username === username) {
+            existIndex = index
+          }
+        })
+        if (existIndex === -1) {
+          users.push({
+            username,
+            password
+          })
+        } else {
+          users.splice(existIndex, 1, {
+            username,
+            password
+          })
+        }
+        setStorage('users', users)
+      }
+      return checkSetTkRes
     } catch (error) {
       return handleRes(error, message)
     }
   } else {
-    return handleRes(false, {
+    return handleRes(false, Object.assign({}, message, {
       '-1': get(passRes, "firstError.backData.message", message['-1'])
-    })
+    }))
   }
+}
+
+let loginCount = 0;
+export const autoLogin = async () => {
+  const users: User.IUser[] = getStorage('users') || [];
+  const [user] = users;
+  if (!user) return false;
+
+  const handleLogin = async (): Promise<boolean> => {
+    const loginRes = await login(user.username, user.password);
+    if (loginRes.status) {
+      loginCount = 0
+      return true
+    }
+    if (loginCount > 1) {
+      loginCount = 0
+      return false
+    }
+    loginCount += 1;
+    return handleLogin()
+  }
+
+  return handleLogin()
 }

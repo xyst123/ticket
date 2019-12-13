@@ -3,7 +3,6 @@ import { iterateObject } from '@/utils';
 interface ICharacterStation {
   character: string,
   stations: Station.IStation[],
-  shrink: boolean
 }
 
 const handleStationString = (stationString: string) => {
@@ -38,7 +37,6 @@ const handleStationString = (stationString: string) => {
     characterStations.push({
       character,
       stations: characterStationItem,
-      shrink: true
     })
   })
   characterStations = characterStations.sort((a, b) => a.character < b.character ? -1 : 1);

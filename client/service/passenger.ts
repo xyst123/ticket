@@ -1,6 +1,6 @@
 import { request, handleRes } from "@/utils";
 
-export const getPassengers = async () => {
+export const getPassengers = async (): Promise<Common.IRes> => {
   const message = {
     '-1': '获取乘车人列表失败'
   }
@@ -14,7 +14,7 @@ export const getPassengers = async () => {
         pageSize: 15
       }
     })
-    const checkRes = handleRes(res, message)
+    const checkRes = handleRes(res, message);
     if (checkRes.status) {
       interface IRes {
         data: {
@@ -22,7 +22,8 @@ export const getPassengers = async () => {
         }
       }
       const { datas } = (<IRes>res).data;
-      return Object.assign({
+      return {
+        ...checkRes,
         data: datas.map(data => ({
           ...data,
           passengerTicketStr: [
@@ -41,8 +42,8 @@ export const getPassengers = async () => {
             data.passenger_id_no,
             '1_'
           ].join(',')
-        })), checkRes
-      })
+        }))
+      }
     }
     return checkRes
   } catch (error) {

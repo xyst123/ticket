@@ -1,8 +1,8 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState } from 'react';
 import { Calendar } from 'antd-mobile';
 import zhCN from 'antd-mobile/lib/calendar/locale/zh_CN';
 import { setStorage } from "@/utils";
+import { getDate } from "@/utils/date";
 import '@/style/Date.less';
 
 interface IProp {
@@ -10,13 +10,12 @@ interface IProp {
 }
 export default function ({ setShowDate }: IProp) {
   const now = new Date();
-  const currentDate = useSelector((state: any) => state.date);
-  const dispatch = useDispatch();
+  const [currentDate] = useState(getDate());
+
   const submit = (date: Date) => {
     setStorage("config", {
       date: date.getTime()
     })
-    dispatch({ type: 'DATE_CHANGE', payload: date });
     setShowDate(false)
   }
 

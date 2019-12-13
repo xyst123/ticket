@@ -1,15 +1,15 @@
 import { request, handleRes } from "@/utils";
 
-interface IGetTicketsData {
+interface IGetRestTicketsData {
   'leftTicketDTO.train_date': string,
   'leftTicketDTO.from_station': string,
   'leftTicketDTO.to_station': string
 }
 
-export const getTickets = async (data: IGetTicketsData): Promise<Common.IRes> => {
+export const getRestTickets = async (data: IGetRestTicketsData): Promise<Common.IRes> => {
   const message = {
     '-1': '获取车次列表失败'
-  }
+  };
   try {
     const res = await request({
       url: '/otn/api/restTicket/query',
@@ -27,7 +27,8 @@ export const getTickets = async (data: IGetTicketsData): Promise<Common.IRes> =>
         }
       }
       const { map, result } = (<IRes>res).data;
-      return Object.assign({
+      return {
+        ...checkRes,
         data: result.map(ticketString => {
           const ticketArray = ticketString.split('|');
           return {
@@ -66,7 +67,7 @@ export const getTickets = async (data: IGetTicketsData): Promise<Common.IRes> =>
             }
           }
         })
-      }, checkRes)
+      }
     }
     return checkRes
   } catch (error) {

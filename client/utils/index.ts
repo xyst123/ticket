@@ -117,7 +117,7 @@ export const getStorage = (key: string, props?: string, defaultValue?: any) => {
   const data = window.localStorage.getItem(key);
   try {
     if (!data) {
-      return data
+      return defaultValue === undefined ? data : defaultValue
     }
     const realData = JSON.parse(data);
     if (props) {

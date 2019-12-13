@@ -1,54 +1,29 @@
-import React, { useState, useEffect, useImperativeHandle } from 'react';
+import React, { useState, useImperativeHandle } from 'react';
 import { withRouter } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
 import { List, Checkbox } from 'antd-mobile';
 import PassengerItem from '@/components/PassengerItem';
-import { getPassengers } from '@/service/passenger';
-import { autoLogin } from '@/service/passport';
+import { getStorage, setStorage } from "@/utils";
 import '@/style/Passenger.less';
 
 const { CheckboxItem } = Checkbox;
 
 interface IProp {
   history: any,
+  passengers: Passenger.IPassenger[],
   childRef: React.RefObject<any>
 }
 
-const Passenger = ({ history, childRef }: IProp) => {
-  const selectedPassengers: Passenger.IPassenger[] = useSelector((state: any) => state.selectedPassengers)
+export default ({ passengers, childRef }: IProp) => {
+  const selectedPassengers: Passenger.IPassenger[] = passengers.filter(passenger => getStorage('passengers', '', []).includes(passenger.allEncStr))
 
-  const [passengers, setPassengers] = useState([]);
   const [currentSelectedPassengers, setCurrentSelectedPassengers] = useState([...selectedPassengers]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
   useImperativeHandle(childRef, () => ({
     submit() {
-      dispatch({ type: "SELECTED_PASSENGERS_CHANGE", payload: currentSelectedPassengers });
+      setStorage('passengers', currentSelectedPassengers.map(currentSelectedPassenger => currentSelectedPassenger.allEncStr));
     }
   }));
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const handleGetPassengers = async () => {
-        const getPassengersRes = await getPassengers();
-        if (getPassengersRes.status) {
-          setPassengers(getPassengersRes.data);
-        } else {
-          const autoLoginRes = await autoLogin();
-          if (autoLoginRes) {
-            await handleGetPassengers()
-          } else {
-            history.push('/login')
-          }
-        }
-      }
-      setLoading(true);
-      await handleGetPassengers();
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
 
   const shouldInitialSelect = (passenger: Passenger.IPassenger) => selectedPassengers.some(item => item.allEncStr === passenger.allEncStr);
 
@@ -78,5 +53,3 @@ const Passenger = ({ history, childRef }: IProp) => {
     </List>
   );
 }
-
-export default withRouter(Passenger)

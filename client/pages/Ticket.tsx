@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { NavBar, Icon, List, Checkbox } from 'antd-mobile';
 import TicketItem from '@/components/TicketItem';
-import { getTickets } from '@/service/ticket'
+import { getRestTickets } from '@/service/ticket'
 import { autoLogin } from '@/service/passport';
-import { dateFormat } from '@/utils';
+import { dateFormat, getStorage, setStorage } from '@/utils';
+import { getDate } from "@/utils/date";
 import '@/style/Ticket.less';
 
 const { CheckboxItem } = Checkbox;
@@ -15,27 +16,31 @@ interface IProp {
 }
 
 function Ticket({ history }: IProp) {
-  const selectedTickets: Ticket.ITicket[] = useSelector((state: any) => state.selectedTickets)
+  const selectedTickets: Ticket.ITicket[] = getStorage('tickets', '', []);
   const currentStation = useSelector((state: any) => state.station);
-  const currentDate = useSelector((state: any) => state.date);
+  const currentDate = getDate()
 
   const [tickets, setTickets] = useState([]);
   const [currentSelectedTickets, setCurrentSelectedTickets] = useState([...selectedTickets]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
+  const submit = () => {
+    setStorage('tickets', currentSelectedTickets);
+    history.goBack()
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       const handleGetTickets = async () => {
-        const getTicketsRes = await getTickets({
+        const getRestTicketsRes = await getRestTickets({
           'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
           'leftTicketDTO.from_station': currentStation.from.id,
           'leftTicketDTO.to_station': currentStation.to.id,
         });
-        if (getTicketsRes.status) {
-          setTickets(getTicketsRes.data);
-        } else {
+        if (getRestTicketsRes.status) {
+          setTickets(getRestTicketsRes.data);
+        }
+        else {
           const autoLoginRes = await autoLogin();
           if (autoLoginRes) {
             await handleGetTickets()
@@ -47,8 +52,7 @@ function Ticket({ history }: IProp) {
       setLoading(true);
       await handleGetTickets();
       setLoading(false);
-    };
-    fetchData();
+    })();
   }, []);
 
   const shouldInitialSelect = (ticket: Ticket.ITicket) => selectedTickets.some(item => item.id === ticket.id);
@@ -76,7 +80,7 @@ function Ticket({ history }: IProp) {
         mode="dark"
         icon={<Icon onClick={() => { history.goBack() }} type="left" />}
         rightContent={[
-          <p key="finish" onClick={() => { dispatch({ type: "SELECTED_TICKETS_CHANGE", payload: currentSelectedTickets }); history.goBack() }}>完成</p>
+          <p key="finish" onClick={submit}>完成</p>
         ]}
       >
         选择车次

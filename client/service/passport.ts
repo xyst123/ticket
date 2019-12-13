@@ -119,9 +119,10 @@ export const login = async (username: string, password: string): Promise<Common.
           appid: 'otn'
         }
       });
-      const checkGetTkRes = handleRes(getTkRes, Object.assign({}, message, {
+      const checkGetTkRes = handleRes(getTkRes, {
+        ...message,
         '-1': '获取tk失败'
-      }));
+      });
       if (!checkGetTkRes.status) {
         return checkLoginRes
       }
@@ -162,9 +163,10 @@ export const login = async (username: string, password: string): Promise<Common.
       return handleRes(error, message)
     }
   } else {
-    return handleRes(false, Object.assign({}, message, {
+    return handleRes(false, {
+      ...message,
       '-1': get(passRes, "firstError.backData.message", message['-1'])
-    }))
+    })
   }
 }
 

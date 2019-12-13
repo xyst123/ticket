@@ -29,8 +29,9 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
         undefined: ''
       }
     })
-    if (!handleRes(submitRes)) {
-      throw new Error('submit')
+    const checkSubmitRes = handleRes(submitRes, message)
+    if (!checkSubmitRes.status) {
+      return checkSubmitRes
     }
 
     const initRes = await request({
@@ -48,7 +49,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
     });
     const availableSeats = get(info, 'limitBuySeatTicketDTO.seat_type_codes', []);
     if (!availableSeats.length) {
-      throw new Error('empty')
+      return handleRes(false, message)
     }
 
     const checkRes = await request({
@@ -68,7 +69,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
       }
     })
     if (!get(checkRes, 'data.submitStatus', false)) {
-      throw new Error('check')
+      return handleRes(false, message)
     }
 
     const orderInfo = get(info, 'limitBuySeatTicketDTO', {});
@@ -95,7 +96,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
       }
     })
     if (!get(countRes, 'status', false)) {
-      throw new Error('check')
+      return handleRes(false, message)
     }
 
     const confirmRes = await request({
@@ -120,7 +121,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
       }
     })
     if (!get(confirmRes, 'data.submitStatus', false)) {
-      throw new Error('confirm')
+      return handleRes(false, message)
     }
     return handleRes(confirmRes, message)
   } catch (error) {

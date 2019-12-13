@@ -34,11 +34,9 @@ function serverRequest(options) {
 module.exports = {
   iterateObject,
   serverRequest,
-
   resolve(file) {
     return path.resolve(__dirname, '../', file);
   },
-
   getConfig() {
     return configs[env];
   },

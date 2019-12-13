@@ -1,5 +1,13 @@
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 
+function getRandom(from, to) {
+  return parseInt(from + (to - from) * Math.random(), 10)
+}
+
+function getIP() {
+  return `${getRandom(1, 254)}.${getRandom(1, 254)}.${getRandom(1, 254)},${getRandom(1, 254)}`
+}
+
 const headerConfig = {
   12306: {
     host: 'kyfw.12306.cn',
@@ -102,6 +110,20 @@ module.exports = {
         pathRewrite: {
           '^/otn/api/restTicket/query': '/otn/leftTicket/query',
         },
+        onProxyReq(proxyReq, req, res) {
+          const divide = '; ';
+          const cookies = (req.headers.cookie || "").split(divide);
+          for (let index in cookies) {
+            const cookie = cookies[index];
+            if (cookie.startsWith('JSESSIONID')) {
+              cookies.splice(index, 1);
+              break
+            }
+          }
+          const realCookie = cookies.join(divide);
+          proxyReq.setHeader('cookie', realCookie);
+          proxyReq.setHeader('X-Forwarded-For', getIP());
+        }
       },
       '/otn/api/submitOrder': {
         target: 'https://kyfw.12306.cn',

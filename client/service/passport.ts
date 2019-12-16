@@ -171,7 +171,7 @@ export const login = async (username: string, password: string): Promise<Common.
 }
 
 let loginCount = 0;
-export const autoLogin = async () => {
+export const autoLogin = () => {
   const users: User.IUser[] = getStorage('users') || [];
   const [user] = users;
   if (!user) return false;

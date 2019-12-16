@@ -1,20 +1,109 @@
 @import url(./vars.less);
-.main{
-  &-basic-station{
-    display: flex;
-    justify-content: space-between;
+
+.main-header {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  z-index: 3;
+}
+
+.main-body {
+  padding-bottom: 82px;
+
+  &-ticket {
+    &-station {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: @font-large;
+      line-height: @line-height-normal;
+
+      h3 {
+        font-weight: bold;
+      }
+
+      .icon-switch {
+        font-size: @font-larger;
+        transition: transform .3s;
+      }
+    }
+
+    &-date {
+      line-height: @line-height-large;
+    }
+
+    .ticket-item__brief {
+      color: @gray2;
+    }
+  }
+
+
+  &-passenger {
+    .passenger-item {
+      color: @gray2;
+    }
+  }
+
+  &-seat-item {
+    display: inline-flex;
     align-items: center;
+    margin: 0 8px 8px 0;
   }
-  .placeholder{
-    color:@placeholder-color;
+
+  &-others {
+    color: @gray2;
+
+    li {
+      line-height: @line-height-normal;
+    }
   }
-  .am-card-body{
+
+  .placeholder {
+    color: @placeholder-color;
+  }
+
+  .am-card-header-extra {
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse;
+  }
+
+  .am-card-header-content img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    margin-right: 10px;
+  }
+
+  .am-card-body {
     min-height: 0;
   }
-  .modal-header{
+
+  .modal-header {
     position: absolute;
     top: 0;
-    width:100%;
+    width: 100%;
     z-index: 2;
+  }
+}
+
+.main-footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 67px;
+  background-color: #fff;
+  z-index: 3;
+
+  .am-button-primary {
+    width: 280px;
+    height: @button-height-large;
+    border-radius: @button-height-large;
+    line-height: @button-height-large;
   }
 }

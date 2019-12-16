@@ -1,4 +1,4 @@
-import { iterateObject } from '@/utils';
+import { iterateObject, getStorage } from '@/utils';
 
 interface ICharacterStation {
   character: string,
@@ -45,5 +45,7 @@ const handleStationString = (stationString: string) => {
 
 export const { stations, stationMap, characterStationMap, characterStations } = handleStationString((window as any).station_names);
 
-export const getStationById = (id: string) => stationMap[id] || {}
+export const getStationById = (id: string) => stationMap[id] || {};
+
+export const getStation = (type: string) => stationMap[getStorage('config', `${type}Station`, type === 'from' ? 'BJP' : 'SHH')]
 

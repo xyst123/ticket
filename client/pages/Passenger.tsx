@@ -8,7 +8,7 @@ import '@/style/Passenger.less';
 const { CheckboxItem } = Checkbox;
 
 interface IProp {
-  history: any,
+  history?: any,
   passengers: Passenger.IPassenger[],
   childRef: React.RefObject<any>
 }
@@ -17,7 +17,6 @@ export default ({ passengers, childRef }: IProp) => {
   const selectedPassengers: Passenger.IPassenger[] = passengers.filter(passenger => getStorage('passengers', '', []).includes(passenger.allEncStr))
 
   const [currentSelectedPassengers, setCurrentSelectedPassengers] = useState([...selectedPassengers]);
-  const [loading, setLoading] = useState(false);
 
   useImperativeHandle(childRef, () => ({
     submit() {

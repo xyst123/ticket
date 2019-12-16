@@ -11,8 +11,8 @@ function TicketItem({ ticket, brief = false }: IProp) {
   return brief ?
     (
       <div className="ticket-item__brief">
-        <p>{ticket.train}</p>
-        <p>{`${ticket.fromName}-${ticket.toName}`}</p>
+        <p className="ticket-item__brief-train">{ticket.train}</p>
+        <p className="ticket-item__brief-station">{`${ticket.fromName}-${ticket.toName}`}</p>
         <p>{`${ticket.fromTime}-${ticket.toTime}`}</p>
       </div>
     ) :

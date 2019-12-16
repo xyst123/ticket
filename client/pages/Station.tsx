@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useState, useSelector, useDispatch } from 'react-redux';
 import { WingBlank, SearchBar, Button } from 'antd-mobile';
-import { characterStationMap, characterStations } from '@/utils/station';
-import { setStorage } from '@/utils'
+import { characterStations } from '@/utils/station';
+import { setStorage } from '@/utils';
+import { getStation } from '@/utils/station';
 import '@/style/Station.less';
 
 const characters = characterStations.map(characterStation => characterStation.character.toUpperCase())
@@ -15,14 +15,11 @@ interface IProp {
 export default function ({ type, setShowStation }: IProp) {
   const [shrinks, setShrinks] = useState(characterStations.map(() => true));
 
-  const currentStation = useSelector((state: any) => state.station);
+  const currentStation = getStation(type);
 
-  const dispatch = useDispatch();
   const submit = (station: Station.IStation) => {
     setStorage('config', { [`${type}Station`]: station.id });
     setStorage('tickets', []);
-    dispatch({ type: `${type.toUpperCase()}_STATION_CHANGE`, payload: station });
-    dispatch({ type: `SELECTED_TICKETS_CHANGE`, payload: [] });
     setShowStation(false)
   }
 
@@ -55,7 +52,7 @@ export default function ({ type, setShowStation }: IProp) {
               <h3 id={`character-${characterStation.character}`} className="station-content-item-header">{characterStation.character}</h3>
 
               <div className={`station-content-item-station ${characterStation.stations.length > 16 && shrinks[index] && 'station-content-item-station__shrink'}`}>
-                {characterStation.stations.map(station => (<Button className={`station-content-item-station-button ${station.id === currentStation[type].id && 'station-content-item-station-button__active'}`} key={`character-station-${characterStation.character}-${station.id}`} inline size="small" onClick={submit.bind(null, station)}>{station.chinese}</Button>))}
+                {characterStation.stations.map(station => (<Button className={`station-content-item-station-button ${station.id === currentStation.id && 'station-content-item-station-button__active'}`} key={`character-station-${characterStation.character}-${station.id}`} inline size="small" onClick={submit.bind(null, station)}>{station.chinese}</Button>))}
               </div>
               <p className="station-content-item-shrink" onClick={setShrink.bind(null, index)}>{shrinks[index] ? '展开' : '收起'}</p>
             </div>

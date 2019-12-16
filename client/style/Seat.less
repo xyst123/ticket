@@ -1,11 +1,15 @@
 @import url(./vars.less);
 
-.passenger {
-  height: @popup-body-height;
+.seat {
+  height: 70vh;
   overflow: scroll;
   background-color: #fff;
 
-  &.am-list .am-list-item.am-checkbox-item .am-list-thumb {
+  .am-list-body::after {
+    display: none !important;
+  }
+
+  .am-list .am-list-item.am-checkbox-item .am-list-thumb {
     .am-checkbox {
       height: 62px;
     }

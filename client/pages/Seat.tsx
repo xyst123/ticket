@@ -4,16 +4,15 @@ import { useDispatch } from 'react-redux';
 import { List, Checkbox } from 'antd-mobile';
 import { getStorage, setStorage } from "@/utils";
 import { seatMap } from '@/config/seat';
-import '@/style/Passenger.less';
+import '@/style/Seat.less';
 
 const { CheckboxItem } = Checkbox;
 
 interface IProp {
-	history: any,
 	childRef: React.RefObject<any>
 }
 
-const Seat = ({ history, childRef }: IProp) => {
+const Seat = ({ childRef }: IProp) => {
 	const selectedSeats: string[] = getStorage('seats', '', []);
 
 	const [currentSelectedSeats, setCurrentSelectedSeats] = useState([...selectedSeats]);
@@ -43,7 +42,7 @@ const Seat = ({ history, childRef }: IProp) => {
 	}
 
 	return (
-		<List className="passenger">
+		<List className="seat">
 			{Object.keys(seatMap).map((seat) => (
 				<CheckboxItem key={`seat-${seat}`} defaultChecked={shouldInitialSelect(seat)} onChange={() => handleSelect(seat)}>
 					{seatMap[seat]}

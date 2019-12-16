@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { NavBar, Icon, List, Checkbox } from 'antd-mobile';
+import { NavBar, Icon, List, Checkbox，Toast } from 'antd-mobile';
 import TicketItem from '@/components/TicketItem';
 import { getRestTickets } from '@/service/ticket'
 import { autoLogin } from '@/service/passport';
 import { dateFormat, getStorage, setStorage } from '@/utils';
 import { getDate } from "@/utils/date";
+import { getStation } from '@/utils/station';
 import '@/style/Ticket.less';
 
 const { CheckboxItem } = Checkbox;
@@ -17,12 +17,12 @@ interface IProp {
 
 function Ticket({ history }: IProp) {
   const selectedTickets: Ticket.ITicket[] = getStorage('tickets', '', []);
-  const currentStation = useSelector((state: any) => state.station);
+  const currentFromStation = getStation('from');
+  const currentToStation = getStation('to');
   const currentDate = getDate()
 
   const [tickets, setTickets] = useState([]);
   const [currentSelectedTickets, setCurrentSelectedTickets] = useState([...selectedTickets]);
-  const [loading, setLoading] = useState(false);
 
   const submit = () => {
     setStorage('tickets', currentSelectedTickets);
@@ -34,24 +34,24 @@ function Ticket({ history }: IProp) {
       const handleGetTickets = async () => {
         const getRestTicketsRes = await getRestTickets({
           'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
-          'leftTicketDTO.from_station': currentStation.from.id,
-          'leftTicketDTO.to_station': currentStation.to.id,
+          'leftTicketDTO.from_station': currentFromStation.id,
+          'leftTicketDTO.to_station': currentToStation.id,
         });
         if (getRestTicketsRes.status) {
           setTickets(getRestTicketsRes.data);
         }
         else {
-          const autoLoginRes = await autoLogin();
-          if (autoLoginRes) {
-            await handleGetTickets()
-          } else {
-            history.push('/login')
-          }
+          // const autoLoginRes = await autoLogin();
+          // if (autoLoginRes) {
+          //   await handleGetTickets()
+          // } else {
+          //   history.push('/login')
+          // }
         }
       }
-      setLoading(true);
+      Toast.loading('加载中', 0);
       await handleGetTickets();
-      setLoading(false);
+      Toast.hide();
     })();
   }, []);
 

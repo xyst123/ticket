@@ -16,7 +16,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
     const ticket = tickets[0];
     const submitRes = await request({
       method: 'POST',
-      url: '/otn/api/submitOrder',
+      url: '/otn/api/order/submit',
       type: 'form',
       data: {
         secretStr: ticket.secretStr,
@@ -35,7 +35,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
     }
 
     const initRes = await request({
-      url: '/otn/api/initOrder',
+      url: '/otn/api/order/init',
     })
     let token = '';
     let info = null;
@@ -54,7 +54,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
 
     const checkRes = await request({
       method: 'POST',
-      url: '/otn/api/checkOrder',
+      url: '/otn/api/order/check',
       type: 'form',
       data: {
         passengerTicketStr: passengers.map(passenger => `${availableSeats[0].id},${passenger.passengerTicketStr}`).join('_'),
@@ -79,7 +79,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
     const keyCheck = get(info, 'key_check_isChange', '');
     const countRes = await request({
       method: 'POST',
-      url: '/otn/api/countOrder',
+      url: '/otn/api/order/count',
       type: 'form',
       data: {
         train_date: date.toString(),
@@ -101,7 +101,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
 
     const confirmRes = await request({
       method: 'POST',
-      url: '/otn/api/confirmOrder',
+      url: '/otn/api/order/confirm',
       type: 'form',
       data: {
         passengerTicketStr: passengers.map(passenger => `${availableSeats[0].id},${passenger.passengerTicketStr}`).join('_'),
@@ -127,4 +127,28 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
   } catch (error) {
     return handleRes(error, message)
   }
+}
+
+export const autoQueryStatus = (token: string) => {
+  const handleQueryStatus = async (): Promise<boolean> => {
+    const [waitTimeRes] = await Promise.all([request({
+      method: 'POST',
+      url: '/otn/api/order/waitTime',
+      type: 'form',
+      data: {
+        random: Date.now(),
+        tourFlag: 'dc',
+        _json_att: '',
+        REPEAT_SUBMIT_TOKEN: token
+      }
+    }), new Promise(resolve => {
+      setTimeout(() => { resolve() }, 3000)
+    })])
+    if (parseInt(get(waitTimeRes, 'data.waitTime', 1)) >= 0) {
+      return handleQueryStatus()
+    } else {
+      return Boolean(get(waitTimeRes, 'data.orderId', null))
+    }
+  }
+  return handleQueryStatus()
 }

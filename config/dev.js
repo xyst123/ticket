@@ -108,7 +108,7 @@ module.exports = {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/restTicket/query': '/otn/leftTicket/query',
+          '^/otn/api/restTicket/query': '/otn/leftTicket/queryA',
         },
         onProxyReq(proxyReq, req, res) {
           const divide = '; ';
@@ -125,39 +125,46 @@ module.exports = {
           proxyReq.setHeader('X-Forwarded-For', getIP());
         }
       },
-      '/otn/api/submitOrder': {
+      '/otn/api/order/submit': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/submitOrder': '/otn/leftTicket/submitOrderRequest',
+          '^/otn/api/order/submit': '/otn/leftTicket/submitOrderRequest',
         },
       },
-      '/otn/api/initOrder': {
+      '/otn/api/order/init': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/initOrder': '/otn/confirmPassenger/initDc',
+          '^/otn/api/order/init': '/otn/confirmPassenger/initDc',
         },
       },
-      '/otn/api/checkOrder': {
+      '/otn/api/order/check': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/checkOrder': '/otn/confirmPassenger/checkOrderInfo',
+          '^/otn/api/order/check': '/otn/confirmPassenger/checkOrderInfo',
         },
       },
-      '/otn/api/countOrder': {
+      '/otn/api/order/count': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/countOrder': '/otn/confirmPassenger/getQueueCount',
+          '^/otn/api/order/count': '/otn/confirmPassenger/getQueueCount',
         },
       },
-      '/otn/api/confirmOrder': {
+      '/otn/api/order/confirm': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/confirmOrder': '/otn/confirmPassenger/confirmSingleForQueue',
+          '^/otn/api/order/confirm': '/otn/confirmPassenger/confirmSingleForQueue',
+        },
+      },
+      '/otn/api/order/waitTime': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/api/order/waitTime': '/otn/confirmPassenger/queryOrderWaitTime',
         },
       },
     },

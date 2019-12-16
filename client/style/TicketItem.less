@@ -1,56 +1,78 @@
 @import url(./vars.less);
-.ticket-item{
+
+.ticket-item {
   display: flex;
   align-items: center;
-  &__brief{
+
+  &__brief {
     display: flex;
-    
+    line-height: @line-height-normal;
+
+    &-train {
+      width: 54px;
+    }
+
+    &-station {
+      width: 120px;
+    }
   }
-  &-station{
-    width:88px;
-    &__left{
-      .ticket-item-station-time{
-        color:@subject-normal;
+
+  &-station {
+    width: 88px;
+
+    &__left {
+      .ticket-item-station-time {
+        color: @subject-normal;
       }
     }
-    &__right{
+
+    &__right {
       text-align: right;
     }
-    &-time{
-      font-size:@font-larger;
+
+    &-time {
+      font-size: @font-larger;
       line-height: 18px;
     }
-    &-name{
-      font-size:@font-small;
+
+    &-name {
+      font-size: @font-small;
     }
   }
-  &-duration{
+
+  &-duration {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width:58px;
-    font-size:@font-small;
+    width: 58px;
+    font-size: @font-small;
     color: @gray1;
-    &-line{
-      width:100%;
-      border-top:1px solid @gray1;;
+
+    &-line {
+      width: 100%;
+      border-top: 1px solid @gray1;
+      ;
     }
   }
-  &-seat{
+
+  &-seat {
     display: flex;
     flex-wrap: wrap;
-    margin-top:4px;
+    margin-top: 4px;
     font-size: @font-smaller;
     line-height: 14px;
     color: @gray1;
-    p{
-      width:60px;
+
+    p {
+      width: 60px;
       margin-right: 35px;
-      &:nth-child(3n){
+
+      &:nth-child(3n) {
         margin-right: 0;
       }
     }
-    &__available{
+
+    &__available {
       color: @subject-normal
     }
   }

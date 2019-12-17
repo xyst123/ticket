@@ -10,6 +10,9 @@
 + 刷票时判断时间
 + 刷票切换ip
 + 多线程刷票
-+ 时间间隔逻辑
 + 热更新
 + ssr
++ ts
++ serviceworker
++ 自定义kooks
++ 优化setStorage

@@ -11,7 +11,7 @@ import Others from './Others';
 import { getRestTickets } from '@/service/ticket';
 import { getPassengers } from '@/service/passenger';
 import { autoLogin } from '@/service/passport';
-import { submitOrder } from '@/service/order';
+import { submitOrder, autoQueryStatus } from '@/service/order';
 import { getStorage, setStorage, dateFormat } from '@/utils';
 import { getDate } from "@/utils/date";
 import { getTime } from "@/utils/others";
@@ -29,6 +29,7 @@ function Main({ history }: IProp) {
   const othersRef: React.RefObject<any> = useRef();
   const shouldRequireRef: React.RefObject<boolean> = useRef(false);
   const timerRef: React.RefObject<any> = useRef(null);
+  const requireCountRef: React.RefObject<any> = useRef(0);
 
   const [currentStationType, setCurrentStationType] = useState('from');
   const [showStation, setShowStation] = useState(false);
@@ -37,10 +38,17 @@ function Main({ history }: IProp) {
   const [showOthers, setShowOthers] = useState(false);
   const [showSeat, setShowSeat] = useState(false);
   const [passengers, setPassengers] = useState([]);
-
+  const [message, setMessage] = useState('');
   const [shouldRequire, setShouldRequire] = useState(false);
   const [timer, setTimer] = useState(null);
   const [switchCount, setSwitchCount] = useState(0);
+  const [modal, setModal] = useState({
+    visible: false,
+    title: '',
+    text: '',
+    footer: []
+  });
+
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');
   const currentDate = getDate();
@@ -61,6 +69,10 @@ function Main({ history }: IProp) {
     setSwitchCount(switchCount + 1)
   }
 
+  const handleSetMessage = (message) => {
+    setMessage(shouldRequire ? message : '')
+  }
+
   const getMatchedTickets = (allTickets: Ticket.ITicket[]) => allTickets.filter(allTicket => {
     const ticketFit = Boolean(selectedTickets.filter(selectedTicket => selectedTicket.id === allTicket.id).length)
     const seatFit = Boolean(selectedSeats.filter(selectedSeat => {
@@ -72,21 +84,24 @@ function Main({ history }: IProp) {
 
   const autoGetRestTicketsRes = () => {
     const handleGetRestTicketsRes = async (): Promise<any[]> => {
-      const getRestTicketsRes = await Promise.all([getRestTickets({
-        'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
-        'leftTicketDTO.from_station': currentFromStation.id,
-        'leftTicketDTO.to_station': currentToStation.id,
-      }), new Promise(resolve => {
-        setTimeout(() => { resolve() }, period * 1000)
-      })]);
-      const [{ data }] = getRestTicketsRes;
       if (!shouldRequireRef.current) {
         return []
-      } else if (Array.isArray(data) && getMatchedTickets(data).length) {
-        setShouldRequire(false);
-        return getMatchedTickets(data);
       } else {
-        return handleGetRestTicketsRes()
+        handleSetMessage(`正在进行第${requireCountRef.current += 1}次抢票`);
+        const getRestTicketsRes = await getRestTickets({
+          'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
+          'leftTicketDTO.from_station': currentFromStation.id,
+          'leftTicketDTO.to_station': currentToStation.id,
+        });
+        const { data } = getRestTicketsRes;
+        if (Array.isArray(data) && getMatchedTickets(data).length) {
+          return getMatchedTickets(data);
+        } else {
+          await new Promise(resolve => {
+            setTimeout(() => { resolve() }, period * 1000)
+          })
+          return handleGetRestTicketsRes()
+        }
       }
     };
     return handleGetRestTicketsRes()
@@ -136,23 +151,56 @@ function Main({ history }: IProp) {
 
   useEffect(() => {
     shouldRequireRef.current = shouldRequire;
-    (async () => {
+    const autoSubmit = async () => {
       if (shouldRequire) {
         const matchedTickets = await autoGetRestTicketsRes();
         if (matchedTickets.length) {
+          handleSetMessage(`正在提交订单`);
           const submitOrderRes = await submitOrder({
             tickets: matchedTickets,
             date: currentDate,
             passengers: selectedPassengers
           });
           if (submitOrderRes.status) {
-            console.log(1111)
+            handleSetMessage(`正在排队`);
+            const autoQueryStatusRes = await autoQueryStatus(submitOrderRes.data);
+            if (autoQueryStatusRes) {
+              requireCountRef.current = 0
+              handleSetMessage(`提交订单成功`);
+              setShouldRequire(false)
+            } else {
+              handleSetMessage(`提交订单失败`);
+              return autoSubmit();
+            }
           } else {
-            console.log(2222)
+            if (submitOrderRes.code === 100) {
+              setModal({
+                visible: true,
+                title: '出错啦',
+                text: submitOrderRes.message,
+                footer: [{
+                  text: '确定',
+                  onPress: setModal.bind(null, {
+                    ...modal,
+                    visible: false
+                  })
+                }]
+              });
+              setMessage(``);
+              setShouldRequire(false);
+            } else {
+              handleSetMessage(`提交订单失败`);
+              return autoSubmit();
+            }
           }
         }
       }
-    })()
+      else {
+        requireCountRef.current = 0;
+        setMessage(``);
+      }
+    }
+    autoSubmit()
   }, [shouldRequire]);
 
   useEffect(() => {
@@ -169,16 +217,14 @@ function Main({ history }: IProp) {
           Ticket
         </NavBar>
         {
-          shouldRequire ? (
-            <NoticeBar mode="link">
-              正在抢票
-            </NoticeBar>
-          ) : ""
+          message ? (
+            <NoticeBar marqueeProps={{ loop: true, style: { padding: '0 2vw' } }}>{message}</NoticeBar>
+          ) : ''
         }
       </div>
 
       {/* TODO  */}
-      <WingBlank className="main-body" style={{ paddingTop: `${shouldRequire ? 96 : 60}px` }}>
+      <WingBlank className="main-body" style={{ paddingTop: `${message ? 96 : 60}px` }}>
         <Card>
           <Card.Header
             title="车次"
@@ -330,6 +376,19 @@ function Main({ history }: IProp) {
       <div className="main-footer">
         <Button type="primary" onClick={toggleExecute}>{timer ? '等待中' : (shouldRequire ? '停止抢票' : '开始抢票')}</Button>
       </div>
+
+      <Modal
+        visible={modal.visible}
+        transparent
+        onClose={setModal.bind(null, {
+          ...modal,
+          visible: false
+        })}
+        title={modal.title}
+        footer={modal.footer}
+      >
+        <p>{modal.text}</p>
+      </Modal>
     </div>
   );
 }

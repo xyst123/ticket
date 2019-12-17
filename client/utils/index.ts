@@ -76,9 +76,9 @@ export const handleRes = (res: any, message = {}): IRes => {
   if (res.httpstatus === 200) {
     res.result_code = '0'
   }
-  const code = parseInt(get(res, "result_code", "-1"))
+  const code = parseInt(get(res, 'result_code', '-1'))
   if (code === 0) {
-    const { success } = message;
+    const success = message[String(0)];
     return {
       status: true,
       code,
@@ -86,7 +86,7 @@ export const handleRes = (res: any, message = {}): IRes => {
     };
   }
   console.error(res);
-  const fail = message[code];
+  const fail = message[String(code)];
   return {
     status: false,
     code,

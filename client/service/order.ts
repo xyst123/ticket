@@ -8,8 +8,8 @@ interface IData {
 
 export const submitOrder = async (data: IData): Promise<Common.IRes> => {
   const message = {
-    'success': '提交订单成功',
-    '-1': '提交订单失败'
+    '-1': '提交订单失败',
+    '100': '您还有未处理的订单'
   }
   const { tickets, date, passengers } = data;
   try {
@@ -32,6 +32,13 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
     const checkSubmitRes = handleRes(submitRes, message)
     if (!checkSubmitRes.status) {
       return checkSubmitRes
+    }
+    if (submitRes.messages[0]) {
+      return {
+        status: false,
+        code: 100,
+        message: '您还有未处理的订单'
+      }
     }
 
     const initRes = await request({
@@ -123,7 +130,12 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
     if (!get(confirmRes, 'data.submitStatus', false)) {
       return handleRes(false, message)
     }
-    return handleRes(confirmRes, message)
+    return {
+      ...handleRes(confirmRes, message),
+      data: {
+        token
+      }
+    }
   } catch (error) {
     return handleRes(error, message)
   }

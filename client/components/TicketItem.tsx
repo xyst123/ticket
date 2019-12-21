@@ -7,7 +7,7 @@ interface IProp {
   brief?: boolean
 }
 
-function TicketItem({ ticket, brief = false }: IProp) {
+export default ({ ticket, brief = false }: IProp)=> {
   return brief ?
     (
       <div className="ticket-item__brief">
@@ -48,5 +48,3 @@ function TicketItem({ ticket, brief = false }: IProp) {
       </div>
     );
 }
-
-export default TicketItem

@@ -1,6 +1,4 @@
-import React, { useState, useImperativeHandle } from 'react';
-import { withRouter } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import React, { useState, useImperativeHandle, useCallback } from 'react';
 import { List, Checkbox } from 'antd-mobile';
 import { getStorage, setStorage } from "@/utils";
 import { seatMap } from '@/config/seat';
@@ -12,20 +10,14 @@ interface IProp {
 	childRef: React.RefObject<any>
 }
 
-const Seat = ({ childRef }: IProp) => {
+export default ({ childRef }: IProp) => {
 	const selectedSeats: string[] = getStorage('seats', '', []);
 
 	const [currentSelectedSeats, setCurrentSelectedSeats] = useState([...selectedSeats]);
 
-	useImperativeHandle(childRef, () => ({
-		submit() {
-			setStorage('seats', currentSelectedSeats);
-		}
-	}));
+	const shouldInitialSelect =useCallback((seat: string) => selectedSeats.some(item => item === seat),[]) ;
 
-	const shouldInitialSelect = (seat: string) => selectedSeats.some(item => item === seat);
-
-	const handleSelect = (seat: string) => {
+	const handleSelect =useCallback((seat: string) => {
 		let existIndex = -1;
 		currentSelectedSeats.forEach((currentSelectedSeat, index) => {
 			if (currentSelectedSeat === seat) {
@@ -39,7 +31,13 @@ const Seat = ({ childRef }: IProp) => {
 			copyCurrentSelectedSeats.splice(existIndex, 1);
 			setCurrentSelectedSeats(copyCurrentSelectedSeats)
 		}
-	}
+	},[currentSelectedSeats]) 
+
+	useImperativeHandle(childRef, () => ({
+		submit() {
+			setStorage('seats', currentSelectedSeats);
+		}
+	}));
 
 	return (
 		<List className="seat">
@@ -51,5 +49,3 @@ const Seat = ({ childRef }: IProp) => {
 		</List>
 	);
 }
-
-export default withRouter(Seat)

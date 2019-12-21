@@ -1,20 +1,62 @@
-import { request, handleRes, dateFormat, get } from "@/utils";
+import { request, handleRes, dateFormat, get, iterateObject } from "@/utils";
+import validate from "@/utils/validate";
 
 interface IData {
   tickets: Ticket.ITicket[],
   date: Date,
   passengers: Passenger.IPassenger[],
+  seats: string[]
 }
 
 export const submitOrder = async (data: IData): Promise<Common.IRes> => {
   const message = {
     '-1': '提交订单失败',
-    '100': '您还有未处理的订单'
+    '40000': '请填写必要的信息',
+    '60000': '您还有未处理的订单',
+    '60001': '当前时间不可以订票'
   }
-  const { tickets, date, passengers } = data;
   try {
+    const { tickets, date, passengers, seats } = data;
+
+    const passRes = validate.check([
+      {
+        value: tickets,
+        rules: [{
+          rule: "isNotEmpty",
+          backData: {
+            message: "请选择车次"
+          }
+        }],
+      },
+      {
+        value: passengers,
+        rules: [{
+          rule: "isNotEmpty",
+          backData: {
+            message: "请选择乘车人"
+          }
+        }],
+      },
+      {
+        value: seats,
+        rules: [{
+          rule: "isNotEmpty",
+          backData: {
+            message: "请选择席别"
+          }
+        }],
+      },
+    ])
+    if (!passRes.pass) {
+      message['40000'] = get(passRes, "firstError.backData.message", message['40000'])
+      return handleRes({
+        result_code: '40000'
+      }, message)
+    }
+
+    // TODO
     const ticket = tickets[0];
-    const submitRes = await request({
+    const submitRes = await request<{ messages: string[] }>({
       method: 'POST',
       url: '/otn/api/order/submit',
       type: 'form',
@@ -34,28 +76,40 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
       return checkSubmitRes
     }
     if (submitRes.messages[0]) {
+      let code = -1;
+      iterateObject(message, (value, key) => {
+        if (submitRes.messages[0] === value) {
+          code = parseInt(key, 10)
+        }
+      })
       return {
         status: false,
-        code: 100,
-        message: '您还有未处理的订单'
+        code,
+        message: submitRes.messages[0]
       }
     }
 
-    const initRes = await request({
+    const initRes = await request<string>({
       url: '/otn/api/order/init',
     })
     let token = '';
     let info = null;
-    (<string>initRes).replace(/globalRepeatSubmitToken = '(\S+)'/, (...args: any[]) => {
+    initRes.replace(/globalRepeatSubmitToken = '(\S+)'/, (...args) => {
       [, token] = args;
-      return (<string>initRes)
+      return initRes
     });
-    (<string>initRes).replace(/var ticketInfoForPassengerForm=(.+);/, (...args: any[]) => {
+    initRes.replace(/var ticketInfoForPassengerForm=(.+);/, (...args) => {
       info = JSON.parse(args[1].replace(/'/g, '"'));
-      return (<string>initRes)
+      return initRes
     });
-    const availableSeats = get(info, 'limitBuySeatTicketDTO.seat_type_codes', []);
+    const availableSeats: { id: any }[] = get(info, 'limitBuySeatTicketDTO.seat_type_codes', []);
     if (!availableSeats.length) {
+      return handleRes(false, message)
+    }
+    const targetSeat = seats.filter(seat => {
+      availableSeats.map(availableSeat => String(availableSeat.id)).includes(seat)
+    })[0];
+    if (targetSeat === undefined) {
       return handleRes(false, message)
     }
 
@@ -64,7 +118,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
       url: '/otn/api/order/check',
       type: 'form',
       data: {
-        passengerTicketStr: passengers.map(passenger => `${availableSeats[0].id},${passenger.passengerTicketStr}`).join('_'),
+        passengerTicketStr: passengers.map(passenger => `${targetSeat},${passenger.passengerTicketStr}`).join('_'),
         oldPassengerStr: passengers.map(passenger => passenger.oldPassengerStr).join(','),
         REPEAT_SUBMIT_TOKEN: token,
         cancel_flag: 2,
@@ -92,7 +146,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
         train_date: date.toString(),
         train_no: leftTicketInfo.train_no,
         stationTrainCode: leftTicketInfo.station_train_code,
-        seatType: availableSeats[0].id,
+        seatType: targetSeat,
         fromStationTelecode: orderInfo.from_station_telecode,
         toStationTelecode: orderInfo.to_station_telecode,
         leftTicket: leftTicketString,
@@ -111,7 +165,7 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
       url: '/otn/api/order/confirm',
       type: 'form',
       data: {
-        passengerTicketStr: passengers.map(passenger => `${availableSeats[0].id},${passenger.passengerTicketStr}`).join('_'),
+        passengerTicketStr: passengers.map(passenger => `${targetSeat},${passenger.passengerTicketStr}`).join('_'),
         oldPassengerStr: passengers.map(passenger => passenger.oldPassengerStr).join(','),
         REPEAT_SUBMIT_TOKEN: token,
         purpose_codes: leftTicketInfo.purpose_codes,

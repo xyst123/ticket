@@ -1,15 +1,15 @@
 {
-  "name": "react-ssr",
-  "short_name": "react-ssr",
-  "icons": [{
-    "src": "/images/favicon.jpeg",
-    "sizes": "120x120",
-    "type": "image/jpeg"
-  }],
-  "start_url": "/",
-  "background_color": "#f2f3f5",
-  "theme_color": "#f60",
-  "orientation": "portrait-primary",
-  "display": "standalone",
-  "description": "react-ssr"
+	"name": "ticket",
+	"short_name": "ticket",
+	"icons": [{
+		"src": "/images/favicon.png",
+		"sizes": "120x120",
+		"type": "image/png"
+	}],
+	"start_url": "/main",
+	"background_color": "#108ee9",
+	"theme_color": "#108ee9",
+	"orientation": "portrait-primary",
+	"display": "standalone",
+	"description": "抢票软件"
 }

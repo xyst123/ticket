@@ -1,76 +1,51 @@
-import { request, handleRes } from "@/utils";
-
+import { request } from "@/utils";
+import { ips } from '@/config/ips'
 interface IGetRestTicketsData {
   'leftTicketDTO.train_date': string,
   'leftTicketDTO.from_station': string,
-  'leftTicketDTO.to_station': string
+  'leftTicketDTO.to_station': string,
+  ips?: string[],
+  selectedTickets?: string[],
+  selectedSeats?: string[]
 }
 
-export const getRestTickets = async (data: IGetRestTicketsData): Promise<Common.IRes> => {
-  const message = {
-    '-1': '获取车次列表失败'
-  };
-  try {
+export const getRestTickets = (data: IGetRestTicketsData): Promise<Common.IRes> => {
+  return request({
+    url: '/otn/restTickets',
+    data: {
+      ...data,
+      ips: JSON.stringify(data.ips || []),
+      selectedTickets: JSON.stringify(data.selectedTickets || []),
+      selectedSeats: JSON.stringify(data.selectedSeats || []),
+      'purpose_codes': 'ADULT'
+    }
+  })
+}
+
+export const checkIps = async () => {
+  let groupIndex = 0;
+  const { length } = ips
+
+  const checkIp = async (): Promise<void> => {
+    const ip = ips[groupIndex];
     const res = await request({
-      url: '/otn/api/restTicket/query',
+      url: '/otn/checkIp',
       data: {
-        ...data,
-        'purpose_codes': 'ADULT',
+        ip
       }
     })
-    const checkRes = handleRes(res, message);
-    if (checkRes.status) {
-      interface IRes {
-        data: {
-          map: { [key: string]: string },
-          result: string[]
-        }
-      }
-      const { map, result } = (<IRes>res).data;
-      return {
-        ...checkRes,
-        data: result.map(ticketString => {
-          const ticketArray = ticketString.split('|');
-          return {
-            secretStr: decodeURIComponent(ticketArray[0]),
-            id: ticketArray[2],
-            train: ticketArray[3],
-            startId: ticketArray[4],
-            endId: ticketArray[5],
-            fromId: ticketArray[6],
-            fromName: map[ticketArray[6]],
-            toId: ticketArray[7],
-            toName: map[ticketArray[7]],
-            fromTime: ticketArray[8],
-            toTime: ticketArray[9],
-            duration: ticketArray[10],
-            available: ticketArray[11],
-            leftTicketStr: ticketArray[12],
-            date: ticketArray[13],
-            seats: {
-              // 硬座
-              '1': ticketArray[29],
-              // 硬卧/二等卧
-              '3': ticketArray[28],
-              // 软卧/一等卧
-              '4': ticketArray[23],
-              //  高级软卧
-              '6': ticketArray[21],
-              // 商务座
-              '9': ticketArray[32],
-              // 动卧
-              F: ticketArray[33],
-              // 一等座
-              M: ticketArray[31],
-              // 二等座
-              O: ticketArray[30],
-            }
-          }
-        })
-      }
+
+    if (res) {
+      (window as any).availableIps.push(ip);
     }
-    return checkRes
-  } catch (error) {
-    return handleRes(error, message)
+
+    groupIndex += 1;
+    if (groupIndex < length) {
+      requestIdleCallback(checkIp);
+    }
+  }
+
+  if (!(window as any).availableIps.length) {
+    requestIdleCallback(checkIp);
   }
 }

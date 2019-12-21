@@ -1,3 +1,5 @@
+import { getType } from './index';
+
 const getStrLen = (str: string) => {
   let length = 0;
   let strCode;
@@ -27,13 +29,39 @@ interface IValidate {
   rules: IRule[]
 }
 
-export default {
-  isType(data: any, options) {
-    const { type } = options;
-    const realType = Object.prototype.toString.call(data);
-    return { pass: realType.toLowerCase() === (`[object ${type}]`).toLowerCase() };
+interface ITypeOptions {
+  type: string
+}
+interface ICompareOptions {
+  target: number,
+  type: string
+}
+interface IDefineOptions {
+  fn: any
+}
+interface IStringLengthOptions {
+  min?: number,
+  max?: number
+}
+
+interface ICheck {
+  pass: boolean,
+  errors: {
+    [key: string]: {
+      value: any,
+      backData: any,
+    }[]
   },
-  compare(data, options) {
+  firstError: Object
+}
+
+export default <{ [key: string]: Function }>{
+  isType(data: any, options: ITypeOptions) {
+    const { type } = options;
+    const realType = getType(data);
+    return { pass: type.toLowerCase() === realType.toLowerCase() };
+  },
+  compare(data: any, options: ICompareOptions) {
     const { target, type } = options;
     const rs = {
       pass: true,
@@ -48,14 +76,13 @@ export default {
     }
     return rs;
   },
-  isInteger(data) {
+  isInteger(data: any) {
     return { pass: Number(data) === parseInt(data, 10) };
   },
-  isChinese(data) {
-    const rs = /^[\u4E00-\u9FA5]+$/.test(data);
-    return { pass: rs };
+  isChinese(data: any) {
+    return { pass: /^[\u4E00-\u9FA5]+$/.test(String(data)) };
   },
-  stringLength(data, options) {
+  stringLength(data: any, options: IStringLengthOptions) {
     const string = String(data).trim();
     const length = getStrLen(string);
     if (options.min !== undefined) {
@@ -70,27 +97,25 @@ export default {
     }
     return { pass: true };
   },
-  isPhone(data) {
+  isPhone(data: any) {
     const phone = String(data);
     const rs = /^((\+?86)|(\+86))?1[0-9]{10}$/.test(phone) || /^\d{3,4}-?\d{7,8}$/.test(phone);
     return { pass: rs };
   },
   isNotEmpty(data: any) {
-    const type = typeof data;
-    const testMap = {
-      object(data) {
-        if (!data) {
-          return false;
-        } if (Array.isArray(data)) {
-          return data.length > 0;
-        }
+    const type = getType(data);
+    const testMap: { [key: string]: Function } = {
+      object(data: Object) {
         return Object.keys(data).length > 0;
       },
-      string(data) {
+      array(data: any[]) {
+        return data.length > 0;
+      },
+      string(data: string) {
         const realData = String(data).trim();
         return realData.length > 0;
       },
-      number(data) {
+      number(data: number) {
         return Boolean(data);
       },
     };
@@ -107,13 +132,12 @@ export default {
   isExist(data: any) {
     return { pass: Boolean(data) };
   },
-  userDefine(data: any, options) {
+  userDefine(data: any, options: IDefineOptions) {
     const { fn } = options;
     return { pass: fn && typeof fn === 'function' ? fn(data) : false };
   },
-
-  check(validates: IValidate[] = []) {
-    const rs = {
+  check(validates: IValidate[] = []): ICheck {
+    const rs: ICheck = {
       pass: true,
       errors: {},
       firstError: {},
@@ -124,7 +148,7 @@ export default {
         const realRule = (rule.rule || '').replace(/\s/g, '');
         let hasValidFn = false;
         const fn = this[realRule];
-        if (!fn || typeof fn !== 'function') {
+        if (!fn || getType(fn) !== 'function') {
           console.error('校验数据——校验函数无效');
           return;
         }

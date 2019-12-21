@@ -5,7 +5,12 @@ export const getPassengers = async (): Promise<Common.IRes> => {
     '-1': '获取乘车人列表失败'
   }
   try {
-    const res = await request({
+    interface IRes {
+      data: {
+        datas: { [key: string]: any }[]
+      }
+    }
+    const res = await request<IRes>({
       method: 'POST',
       url: '/otn/api/passenger/query',
       type: 'form',
@@ -16,12 +21,7 @@ export const getPassengers = async (): Promise<Common.IRes> => {
     })
     const checkRes = handleRes(res, message);
     if (checkRes.status) {
-      interface IRes {
-        data: {
-          datas: { [key: string]: any }[]
-        }
-      }
-      const { datas } = (<IRes>res).data;
+      const { datas } = res.data;
       return {
         ...checkRes,
         data: datas.map(data => ({

@@ -9,7 +9,7 @@ interface IProp {
   history: any
 }
 
-function Login({ history }: IProp) {
+const Login=({ history }: IProp)=> {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,16 +18,19 @@ function Login({ history }: IProp) {
     getCookie()
   }, []);
 
-  const handleLogin = async () => {
-    setLoading(true);
-    const loginRes = await login(username, password);
-    if (loginRes.status) {
-      history.push('/');
-    } else {
-      Toast.fail(loginRes.message, 3)
-    }
-    setLoading(false);
-  };
+  useEffect(() => {
+    (async()=>{
+      if(loading){
+        const loginRes = await login(username, password);
+        setLoading(false);
+        if (loginRes.status) {
+          history.push('/main');
+        } else {
+          Toast.fail(loginRes.message, 3)
+        }
+      }
+    })()
+  }, [loading]);
 
   return (
     <div className="login-wrapper">
@@ -47,7 +50,7 @@ function Login({ history }: IProp) {
           onChange={(string) => { setPassword(string); }}
         />
 
-        <Button className="login-submit" loading={loading} type="primary" onClick={handleLogin}>登录</Button>
+        <Button className="login-submit" loading={loading} type="primary" onClick={setLoading.bind(null,true)}>登录</Button>
       </WingBlank>
     </div>
   );

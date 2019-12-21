@@ -1,13 +1,5 @@
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 
-function getRandom(from, to) {
-  return parseInt(from + (to - from) * Math.random(), 10)
-}
-
-function getIP() {
-  return `${getRandom(1, 254)}.${getRandom(1, 254)}.${getRandom(1, 254)},${getRandom(1, 254)}`
-}
-
 const headerConfig = {
   12306: {
     host: 'kyfw.12306.cn',
@@ -104,27 +96,6 @@ module.exports = {
           '^/otn/api/passenger/query': '/otn/passengers/query',
         },
       },
-      '/otn/api/restTicket/query': {
-        target: 'https://kyfw.12306.cn',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/otn/api/restTicket/query': '/otn/leftTicket/queryA',
-        },
-        onProxyReq(proxyReq, req, res) {
-          const divide = '; ';
-          const cookies = (req.headers.cookie || "").split(divide);
-          for (let index in cookies) {
-            const cookie = cookies[index];
-            if (cookie.startsWith('JSESSIONID')) {
-              cookies.splice(index, 1);
-              break
-            }
-          }
-          const realCookie = cookies.join(divide);
-          proxyReq.setHeader('cookie', realCookie);
-          proxyReq.setHeader('X-Forwarded-For', getIP());
-        }
-      },
       '/otn/api/order/submit': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
@@ -165,6 +136,13 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: {
           '^/otn/api/order/waitTime': '/otn/confirmPassenger/queryOrderWaitTime',
+        },
+      },
+      '/otn/api/order/aaa': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/api/order/aaa': '/otn/leftTicket/queryA',
         },
       },
     },

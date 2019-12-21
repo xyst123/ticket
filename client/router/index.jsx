@@ -4,13 +4,18 @@ import {
   Switch,
   Route,
 } from 'react-router-dom';
+import Loadable from 'react-loadable';
+
 import Main from '@/pages/Main';
 import Login from '@/pages/Login';
-import Ticket from '@/pages/Ticket';
+const Ticket= Loadable({
+  loader: () => import('@/pages/Ticket'),
+  loading:()=>(<div>Loading...</div>)
+});
 
 export const routes = [
   {
-    path: '/',
+    path: '/main',
     component: Main
   }, {
     path: '/login',

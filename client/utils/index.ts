@@ -1,7 +1,7 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig, Method } from "axios";
 import qs from 'qs';
 
-export const iterateObject = (object: { [key: string]: any }, handler: (value?: any, key?: string | number, object?: object) => void) => {
+export const iterateObject = (object: { [key: string]: any }, handler: (value: any, key: string, object?: { [key: string]: any }) => void) => {
   const keys = Object.keys(object);
   keys.forEach((key) => {
     const value = object[key];
@@ -15,8 +15,8 @@ export const get = (object: any, props: string, defaultValue: any) => {
   const realProps = [...temp];
   temp.forEach((item) => {
     const reg = /^(\w+)\[(\w+)\]$/;
-    if (reg.test(item)) {
-      const matches = item.match(reg);
+    const matches = item.match(reg);
+    if (Array.isArray(matches)) {
       const field1 = matches[1];
       const field2 = matches[2];
       const replaceIndex = realProps.indexOf(item);
@@ -36,9 +36,17 @@ export const get = (object: any, props: string, defaultValue: any) => {
   }, object);
 }
 
-export const request = ({
+interface IRequestOptions {
+  url: string,
+  method?: string,
+  type?: string,
+  params?: { [key: string]: any },
+  data?: any,
+  headers?: { [key: string]: string }
+}
+export const request = <T>({
   method = 'GET', url = '', type = '', params = {}, data = {}, headers = {}
-}): string | Object => {
+}: IRequestOptions): Promise<T> => {
   method = method.toUpperCase();
   const realParams = {};
   if (method === 'GET') {
@@ -50,8 +58,8 @@ export const request = ({
       headers['Content-Type'] = 'application/x-www-form-urlencoded'
     }
   }
-  const options = {
-    method,
+  const options: AxiosRequestConfig = {
+    method: (<Method>method),
     url,
     data,
     params: realParams,
@@ -66,13 +74,13 @@ export const request = ({
   });
 };
 
-interface IRes {
+interface IHandleResRes {
   status: boolean,
   code: number,
   message: string
 }
 
-export const handleRes = (res: any, message = {}): IRes => {
+export const handleRes = (res: any, message: { [key: string]: string } = {}): IHandleResRes => {
   if (res.httpstatus === 200) {
     res.result_code = '0'
   }
@@ -111,7 +119,7 @@ export const dateFormat = (date: Date, format = 'yyyy-MM-dd HH:mm:ss') => {
   return format;
 }
 
-export const getType = (value: any) => Object.prototype.toString.call(value).replace(/\[|\]|object|\s/g, '').toLowerCase()
+export const getType = (value: any): string => Object.prototype.toString.call(value).replace(/\[|\]|object|\s/g, '').toLowerCase()
 
 export const getStorage = (key: string, props?: string, defaultValue?: any) => {
   const data = window.localStorage.getItem(key);
@@ -142,4 +150,8 @@ export const setStorage = (key: string, value: any, assign: boolean = true) => {
   } else {
     window.localStorage.setItem(key, value);
   }
+}
+
+export const getRandom = (from: number, to: number): number => {
+  return parseInt(String(from + (to - from) * Math.random()), 10)
 }

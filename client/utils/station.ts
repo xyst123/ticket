@@ -33,7 +33,7 @@ const handleStationString = (stationString: string) => {
       }
     }
   })
-  iterateObject(characterStationMap, (characterStationItem: Station.IStation[], character: string) => {
+  iterateObject(characterStationMap, (characterStationItem, character) => {
     characterStations.push({
       character,
       stations: characterStationItem,

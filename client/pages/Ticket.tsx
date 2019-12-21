@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { withRouter } from 'react-router-dom';
-import { NavBar, Icon, List, Checkbox，Toast } from 'antd-mobile';
+import { NavBar, Icon, List, Checkbox, Toast } from 'antd-mobile';
 import TicketItem from '@/components/TicketItem';
 import { getRestTickets } from '@/service/ticket'
-import { autoLogin } from '@/service/passport';
 import { dateFormat, getStorage, setStorage } from '@/utils';
 import { getDate } from "@/utils/date";
 import { getStation } from '@/utils/station';
@@ -21,13 +20,31 @@ function Ticket({ history }: IProp) {
   const currentToStation = getStation('to');
   const currentDate = getDate()
 
-  const [tickets, setTickets] = useState([]);
+  const [tickets, setTickets] = useState<Ticket.ITicket[]>([]);
   const [currentSelectedTickets, setCurrentSelectedTickets] = useState([...selectedTickets]);
 
-  const submit = () => {
+  const shouldInitialSelect = useCallback((ticket: Ticket.ITicket) => selectedTickets.some(item => item.train === ticket.train), []);
+
+  const handleSelect = useCallback((ticket: Ticket.ITicket) => {
+    let existIndex = -1;
+    currentSelectedTickets.forEach((currentSelectedTicket, index) => {
+      if (currentSelectedTicket.train === ticket.train) {
+        existIndex = index
+      }
+    });
+    if (existIndex === -1) {
+      setCurrentSelectedTickets([...currentSelectedTickets, ticket])
+    } else {
+      const copyCurrentSelectedTickets = [...currentSelectedTickets];
+      copyCurrentSelectedTickets.splice(existIndex, 1);
+      setCurrentSelectedTickets(copyCurrentSelectedTickets)
+    }
+  }, [currentSelectedTickets])
+
+  const submit = useCallback(() => {
     setStorage('tickets', currentSelectedTickets);
     history.goBack()
-  }
+  }, [currentSelectedTickets])
 
   useEffect(() => {
     (async () => {
@@ -40,38 +57,12 @@ function Ticket({ history }: IProp) {
         if (getRestTicketsRes.status) {
           setTickets(getRestTicketsRes.data);
         }
-        else {
-          // const autoLoginRes = await autoLogin();
-          // if (autoLoginRes) {
-          //   await handleGetTickets()
-          // } else {
-          //   history.push('/login')
-          // }
-        }
       }
       Toast.loading('加载中', 0);
       await handleGetTickets();
       Toast.hide();
     })();
   }, []);
-
-  const shouldInitialSelect = (ticket: Ticket.ITicket) => selectedTickets.some(item => item.id === ticket.id);
-
-  const handleSelect = (ticket: Ticket.ITicket) => {
-    let existIndex = -1;
-    currentSelectedTickets.forEach((currentSelectedTicket, index) => {
-      if (currentSelectedTicket.id === ticket.id) {
-        existIndex = index
-      }
-    });
-    if (existIndex === -1) {
-      setCurrentSelectedTickets([...currentSelectedTickets, ticket])
-    } else {
-      const copyCurrentSelectedTickets = [...currentSelectedTickets];
-      copyCurrentSelectedTickets.splice(existIndex, 1);
-      setCurrentSelectedTickets(copyCurrentSelectedTickets)
-    }
-  }
 
   return (
     <div className="ticket">
@@ -87,7 +78,7 @@ function Ticket({ history }: IProp) {
       </NavBar>
       <List className="ticket-list">
         {tickets.map(ticket => (
-          <CheckboxItem key={`ticket-${ticket.id}`} defaultChecked={shouldInitialSelect(ticket)} onChange={() => handleSelect(ticket)}>
+          <CheckboxItem key={`ticket-${ticket.train}`} defaultChecked={shouldInitialSelect(ticket)} onChange={() => handleSelect(ticket)}>
             <TicketItem ticket={ticket} />
           </CheckboxItem>
         ))}

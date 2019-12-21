@@ -15,7 +15,7 @@ const hotMiddleware = require('koa-webpack-hot-middleware');
 const webpack = require('webpack');
 const webpackMainConfig = require('../build/webpack.main.config');
 const composeRoutes = require('./middlewares/composeRouter');
-// const clientRoute = require('./middlewares/clientRoute').default;
+const clientRoute = require('./middlewares/clientRoute');
 const { resolve, iterateObject, getConfig } = require('../utils');
 require('./helpers/logger');
 
@@ -41,7 +41,7 @@ app.use(bodyParser());
 app.use(composeRoutes(`${__dirname}/controllers`).routes());
 app.use(router.allowedMethods());
 
-// app.use(clientRoute);
+app.use(clientRoute);
 
 if (env === 'dev') {
   const compiler = webpack(webpackMainConfig);

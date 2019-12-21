@@ -14,6 +14,7 @@ declare namespace Station {
 		contraction: string,
 		index: string
 	}
+	type TStationType = 'from' | 'to'
 }
 
 declare namespace Passenger {
@@ -29,16 +30,15 @@ declare namespace Passenger {
 
 declare namespace Ticket {
 	interface ITicket {
+		id: string,
+		secretStr: string,
 		train: string,
 		fromName: string,
 		toName: string,
 		fromTime: string,
 		toTime: string,
 		duration: string,
-		seats: {
-			name: string,
-			number: string
-		}[]
+		seats: { [key: string]: string }
 	}
 }
 
@@ -58,8 +58,12 @@ declare namespace Common {
 		status: boolean,
 		code: number,
 		message: string,
-		data: any
+		data?: any
 	}
+}
+
+interface RefObject<T> {
+	current: T
 }
 
 

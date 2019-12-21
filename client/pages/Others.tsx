@@ -1,6 +1,5 @@
-import React, { useState, useImperativeHandle } from 'react';
+import React, { useState, useCallback, useImperativeHandle } from 'react';
 import { Stepper, DatePickerView } from 'antd-mobile';
-import zhCN from 'antd-mobile/lib/calendar/locale/zh_CN';
 import { getStorage, setStorage } from "@/utils";
 import { getTime } from "@/utils/others";
 import '@/style/Others.less';
@@ -8,24 +7,23 @@ import '@/style/Others.less';
 interface IProp {
   childRef: React.RefObject<any>
 }
-export default function ({ childRef }: IProp) {
+
+export default ({ childRef }: IProp) => {
   const now = new Date();
 
   const [period, setPeriod] = useState(getStorage('config', 'period', 3));
+  const [ipNumber, setIpNumber] = useState(getStorage('config', 'ipNumber', 3));
   const [time, setTime] = useState(getTime());
 
-  const periodEdit = (value: number) => {
-    setPeriod(value)
-  }
-
-  const timeEdit = (date: string[]) => {
+  const timeEdit = useCallback((date: string[]) => {
     setTime(new Date(`${date[0]}-${parseInt(date[1]) + 1}-${date[2]} ${date[3]}:${date[4]}`));
-  }
+  }, [])
 
   useImperativeHandle(childRef, () => ({
     submit() {
       setStorage('config', {
         period,
+        ipNumber,
         time: time.getTime()
       });
     }
@@ -40,13 +38,22 @@ export default function ({ childRef }: IProp) {
           max={10}
           min={1}
           value={period}
-          onChange={periodEdit}
+          onChange={setPeriod}
+        />
+      </li>
+      <li>
+        <h4>每次请求cdn数</h4>
+        <Stepper
+          showNumber
+          max={5}
+          min={0}
+          value={ipNumber}
+          onChange={setIpNumber}
         />
       </li>
       <li>
         <h4>抢票开始时间</h4>
         <DatePickerView
-          locale={zhCN}
           minDate={now}
           maxDate={new Date(+now + 29 * 24 * 60 * 60 * 1000)}
           value={time}

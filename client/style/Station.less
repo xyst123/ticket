@@ -6,7 +6,19 @@
 .station {
   background-color: #fff;
 
-  .station-content {
+  &-search {
+    position: relative;
+
+    &-result {
+      position: absolute;
+      width: 100%;
+      height: 60vh;
+      overflow: scroll;
+      z-index: 1;
+    }
+  }
+
+  &-content {
     height: @popup-body-height;
     overflow: scroll;
 
@@ -74,5 +86,17 @@
 
       }
     }
+  }
+
+  .am-list-body {
+
+    &::after,
+    &::before {
+      display: none;
+    }
+  }
+
+  .am-list-item .am-list-line .am-list-content {
+    font-size: @font-normal ;
   }
 }

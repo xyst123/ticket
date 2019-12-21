@@ -95,14 +95,11 @@ const baseConfig = {
         },
       }],
       threadPool: happyThreadPool,
-      verbose: true,
     }),
     new HappyPack({
       id: 'babel',
       loaders: ['babel-loader'],
       threadPool: happyThreadPool,
-      // 是否允许HappyPack输出日志
-      verbose: true,
     }),
     new HappyPack({
       id: 'url',
@@ -114,7 +111,6 @@ const baseConfig = {
         },
       }],
       threadPool: happyThreadPool,
-      verbose: true,
     }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
@@ -142,7 +138,6 @@ baseConfig.plugins.push(new HappyPack({
   id: 'style',
   loaders: styleLoaders,
   threadPool: happyThreadPool,
-  verbose: true,
 }));
 
 module.exports = merge(baseConfig, envWebpackConfig);

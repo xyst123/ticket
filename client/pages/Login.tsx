@@ -3,13 +3,13 @@ import { withRouter } from 'react-router-dom';
 import { WingBlank, InputItem, Button, Toast } from 'antd-mobile';
 import { getCookie, login } from '@/service/passport';
 import '@/style/Login.less';
-import '../../server/static/js/cookie';
 
 interface IProp {
-  history: any
+  history: any,
+  location:any
 }
 
-const Login=({ history }: IProp)=> {
+const Login=({ history,location}: IProp)=> {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,12 @@ const Login=({ history }: IProp)=> {
         const loginRes = await login(username, password);
         setLoading(false);
         if (loginRes.status) {
-          history.push('/main');
+          const {redirect}=location.query || {};
+          if(redirect){
+            history.push(redirect);
+          }else {
+            history.push('/main');
+          }
         } else {
           Toast.fail(loginRes.message, 3)
         }

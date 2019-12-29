@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   BrowserRouter as Router,
+  Redirect,
   Switch,
   Route,
 } from 'react-router-dom';
@@ -29,6 +30,7 @@ export const routes = [
 export const Routes = () => (
   <Router routes={routes}>
     <Switch>
+      <Route path='/' exact render={()=> (<Redirect to='/main'/>)}/>
       {routes.map((route, index) => (
         <Route key={`route-${index}`} path={route.path} exact render={() => <route.component />} />
       ))}

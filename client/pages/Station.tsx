@@ -71,7 +71,7 @@ export default ({ type, setShowStation }: IProp) => {
               <div className={`station-content-item-station ${characterStation.stations.length > 16 && shrinks[index] && 'station-content-item-station__shrink'}`}>
                 {characterStation.stations.map(station => (<Button className={`station-content-item-station-button ${station.id === currentStation.id && 'station-content-item-station-button__active'}`} key={`character-station-${characterStation.character}-${station.id}`} inline size="small" onClick={submit.bind(null, station)}>{station.chinese}</Button>))}
               </div>
-              <p className="station-content-item-shrink" onClick={setShrink.bind(null, index)}>{shrinks[index] ? '展开' : '收起'}</p>
+              <p className={`station-content-item-shrink iconfont icon-arrow toggle ${shrinks[index]?'':'toggle-active'}`} onClick={setShrink.bind(null, index)}></p>
             </div>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { seatMap } from '@/config/seat'
+import { seatMap } from '@/config/seat';
+import {getCrossDays} from '@/utils/ticket';
 import '@/style/TicketItem.less';
 
 interface IProp {
@@ -29,7 +30,7 @@ export default ({ ticket, brief = false }: IProp)=> {
             <p>{ticket.train}</p>
           </div>
           <div className="ticket-item-station ticket-item-station__right">
-            <p className="ticket-item-station-time">{ticket.toTime}</p>
+            <p className="ticket-item-station-time">{ticket.toTime}<span>{getCrossDays(ticket.fromTime,ticket.duration)}</span></p>
             <p className="ticket-item-station-name">{ticket.toName}</p>
           </div>
         </div>
@@ -45,6 +46,9 @@ export default ({ ticket, brief = false }: IProp)=> {
             </p>
           ))}
         </div>
+        {
+          ticket.saleTime?(<p className="ticket-item-sale-time">{ticket.saleTime}</p>):''
+        }
       </div>
     );
 }

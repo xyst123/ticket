@@ -14,7 +14,7 @@ function iterateObject(object, handler) {
 
 function serverRequest(options) {
   return axios(options).then((res) => res.data).catch((error) => {
-    console.error(error);
+    logger(error);
   });
 }
 

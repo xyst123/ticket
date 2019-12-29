@@ -27,6 +27,15 @@
     }
 
     &__right {
+      .ticket-item-station-time {
+        color: @subject-normal;
+        position: relative;
+        span{
+          position: absolute;
+          bottom:0;
+          font-size: @font-small;
+        }
+      }
       text-align: right;
     }
 
@@ -75,5 +84,11 @@
     &__available {
       color: @subject-normal
     }
+  }
+  &-sale-time{
+    margin-top: 4px;
+    line-height: 14px;
+    color: @error-color;
+    font-size: @font-smaller;
   }
 }

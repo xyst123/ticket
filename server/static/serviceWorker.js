@@ -8,7 +8,6 @@ const cacheFiles = [
 	'/images/main/passenger.svg',
 	'/images/main/seat.svg',
 	'/images/main/ticket.svg',
-	'/js/cookie.js',
 	'/js/performance.js',
 	'/js/station.js',
 	'/js/vendors.dll.js',

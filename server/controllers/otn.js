@@ -21,6 +21,7 @@ const handleTicketRes = (ticketRes) => {
 			const ticketArray = ticketString.split('|');
 			return {
 				secretStr: decodeURIComponent(ticketArray[0]),
+				saleTime: ticketArray[1],
 				id: ticketArray[2],
 				train: ticketArray[3],
 				startId: ticketArray[4],

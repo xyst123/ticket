@@ -31,6 +31,7 @@ declare namespace Passenger {
 declare namespace Ticket {
 	interface ITicket {
 		id: string,
+		saleTime:string,
 		secretStr: string,
 		train: string,
 		fromName: string,

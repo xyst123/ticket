@@ -82,6 +82,13 @@ function Main({ history }: IProp) {
     setSwitchCount(switchCount + 1)
   }
 
+  const closeModal=()=>{
+    setModal({
+      ...modal,
+      visible:false
+    })
+  }
+
   const getIps = (number: number): string[] => {
     const ips = [];
     const { availableIps } = (window as any);
@@ -92,6 +99,16 @@ function Main({ history }: IProp) {
     }
     return ips
   };
+
+  const getTimeout=()=>{
+    const now=new Date();
+    const year=now.getFullYear();
+    const month=now.getMonth();
+    const date=now.getDate();
+    const hours=now.getHours();
+    const startTime= hours>=23 ? new Date(year, month, date+1, 7) : new Date(year, month, date, 7);
+    return startTime.getTime()-now.getTime()
+  }
 
   const handleSetMessage = (message: string) => {
     setMessage(shouldRequire ? message : '')
@@ -159,7 +176,10 @@ function Main({ history }: IProp) {
           if (autoLoginRes) {
             await handleGetPassengers()
           } else {
-            history.push('/login')
+            history.push({
+              pathname:'/login',
+              query:{redirect:'/main'}
+            })
           }
         }
       }
@@ -177,45 +197,68 @@ function Main({ history }: IProp) {
     shouldRequireRef.current = shouldRequire;
     const autoSubmit = async (): Promise<void> => {
       if (shouldRequire) {
-        const matchedTickets = await autoGetRestTicketsRes();
-        if (matchedTickets.length) {
-          handleSetMessage(`正在提交订单`);
-          const submitOrderRes = await submitOrder({
-            tickets: matchedTickets,
-            date: currentDate,
-            passengers: selectedPassengers,
-            seats: selectedSeats
-          });
-          if (submitOrderRes.status) {
-            handleSetMessage(`正在排队`);
-            const autoQueryStatusRes = await autoQueryStatus(submitOrderRes.data);
-            if (autoQueryStatusRes) {
-              requireCountRef.current = 0
-              handleSetMessage(`提交订单成功`);
-              setShouldRequire(false)
+        const hour=new Date().getHours()
+        if(hour>7 && hour<23){
+          const matchedTickets = await autoGetRestTicketsRes();
+          if (matchedTickets.length) {
+            handleSetMessage(`正在提交订单`);
+            const submitOrderRes = await submitOrder({
+              tickets: matchedTickets,
+              date: currentDate,
+              passengers: selectedPassengers,
+              seats: selectedSeats
+            });
+            if (submitOrderRes.status) {
+              handleSetMessage(`正在排队`);
+              const autoQueryStatusRes = await autoQueryStatus(submitOrderRes.data);
+              if (autoQueryStatusRes) {
+                requireCountRef.current = 0
+                handleSetMessage(`提交订单成功`);
+                setShouldRequire(false)
+              } else {
+                handleSetMessage(`提交订单失败`);
+                return autoSubmit();
+              }
+            } else if (stopCodes[submitOrderRes.code]) {
+              setShouldRequire(false);
+              setMessage(``);
+              setModal({
+                visible: true,
+                title: '出错啦',
+                text: submitOrderRes.message,
+                footer: [{
+                  text: '确定',
+                  onPress: closeModal
+                }]
+              });
             } else {
               handleSetMessage(`提交订单失败`);
-              return autoSubmit();
+              autoSubmit();
             }
-          } else if (stopCodes[submitOrderRes.code]) {
-            setShouldRequire(false);
-            setMessage(``);
-            setModal({
-              visible: true,
-              title: '出错啦',
-              text: submitOrderRes.message,
-              footer: [{
-                text: '确定',
-                onPress: setModal.bind(null, {
-                  ...modal,
-                  visible: false
-                })
-              }]
-            });
-          } else {
-            handleSetMessage(`提交订单失败`);
-            autoSubmit();
           }
+        }
+        else {
+          setShouldRequire(false);
+          setModal({
+            visible: true,
+            title: '系统维护中',
+            text: '将在7:00自动抢票',
+            footer: [{
+              text: '确定',
+              onPress: ()=>{
+                closeModal();
+                setTimer(setTimeout(() => {
+                  setShouldRequire(true)
+                  setTimer(null)
+                }, getTimeout()))
+              }
+            },{
+              text: '取消',
+              onPress:()=>{
+                closeModal()
+              } 
+            }]
+          });
         }
       }
       else {
@@ -231,7 +274,6 @@ function Main({ history }: IProp) {
   }, [timer]);
 
   useEffect(() => {
-    console.log(111, hasSubmit, selectedTickets, showPassenger, showSeat)
     if (hasSubmit && !showPassenger && !showSeat) {
       setErrors({
         selectedTickets: !selectedTickets.length,
@@ -246,7 +288,7 @@ function Main({ history }: IProp) {
       <div className="main-header">
         <NavBar
           mode="dark"
-          icon={<Icon type="cross" onClick={setShowStation.bind(null, false)} />}
+          icon={<Icon type="left" onClick={()=>{history.push('/login')}} />}
         >
           Ticket
         </NavBar>
@@ -419,10 +461,7 @@ function Main({ history }: IProp) {
       <Modal
         visible={modal.visible}
         transparent
-        onClose={setModal.bind(null, {
-          ...modal,
-          visible: false
-        })}
+        onClose={closeModal}
         title={modal.title}
         footer={modal.footer}
       >

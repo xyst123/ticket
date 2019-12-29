@@ -106,7 +106,7 @@ const baseConfig = {
       loaders: [{
         loader: 'url-loader',
         options: {
-          limit: 10000,
+          limit: 1024*8,
           name: '[name].[ext]?[hash]',
         },
       }],

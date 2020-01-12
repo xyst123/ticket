@@ -43,7 +43,7 @@ function Ticket({ history }: IProp) {
 
   const submit = useCallback(() => {
     setStorage('tickets', currentSelectedTickets);
-    history.goBack()
+    history.replace('/main')
   }, [currentSelectedTickets])
 
   useEffect(() => {

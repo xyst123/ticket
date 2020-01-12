@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { withRouter } from 'react-router-dom';
 import { WingBlank, WhiteSpace, NoticeBar, Card, Icon, Button, Modal, NavBar, Tag, Toast } from 'antd-mobile';
+import useConstant from '@/hooks/constant';
 import TicketItem from '@/components/TicketItem';
 import PassengerItem from '@/components/PassengerItem';
 import Station from './Station';
@@ -10,9 +11,10 @@ import Seat from './Seat';
 import Others from './Others';
 import { getRestTickets } from '@/service/ticket';
 import { getPassengers } from '@/service/passenger';
+import { getUserInfo } from '@/service/user';
 import { autoLogin } from '@/service/passport';
 import { submitOrder, autoQueryStatus } from '@/service/order';
-import { getStorage, setStorage, dateFormat, getRandom } from '@/utils';
+import { getStorage, setStorage, dateFormat, getRandom, getFirstName } from '@/utils';
 import { getStation } from '@/utils/station';
 import { getDate } from "@/utils/date";
 import { getTime } from "@/utils/others";
@@ -27,9 +29,11 @@ function Main({ history }: IProp) {
   const passengerRef: RefObject<any> = useRef();
   const seatRef: RefObject<any> = useRef();
   const othersRef: RefObject<any> = useRef();
-  const shouldRequireRef: RefObject<boolean> = useRef(false);
-  const timerRef: RefObject<any> = useRef(null);
+
   const requireCountRef: RefObject<number> = useRef(0);
+
+  const [timer, getTimerConstant, setTimer] = useConstant<any>(null);
+  const [shouldRequire, getShouldRequireConstant, setShouldRequire] = useConstant(false);
 
   const [currentStationType, setCurrentStationType] = useState<Station.TStationType>('from');
   const [showStation, setShowStation] = useState(false);
@@ -39,11 +43,10 @@ function Main({ history }: IProp) {
   const [showOthers, setShowOthers] = useState(false);
   const [showSeat, setShowSeat] = useState(false);
   const [passengers, setPassengers] = useState<Passenger.IPassenger[]>([]);
+  const [userInfo, setUserInfo] = useState<UserInfo.IUserInfo>({ user_name: "" });
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [hasSubmit, setHasSubmit] = useState(false);
-  const [shouldRequire, setShouldRequire] = useState(false);
-  const [timer, setTimer] = useState<any>(null);
   const [switchCount, setSwitchCount] = useState(0);
   interface IModal {
     visible: boolean,
@@ -51,7 +54,7 @@ function Main({ history }: IProp) {
     text: string,
     footer: {
       text: string,
-      onPress: Function
+      onPress: (...args: any[]) => void | Promise<any>
     }[]
   }
   const [modal, setModal] = useState<IModal>({
@@ -61,35 +64,35 @@ function Main({ history }: IProp) {
     footer: []
   });
 
+  const time = getTime();
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');
   const currentDate = getDate();
   const period = parseInt(getStorage('config', 'period', 3));
   const ipNumber = parseInt(getStorage('config', 'ipNumber',
     3));
-  const time = getTime();
   const selectedSeats: string[] = getStorage('seats', '', []);
   const selectedPassengers = passengers.filter(passenger => getStorage('passengers', '', []).includes(passenger.allEncStr));
 
-  const handleShowStation = (type: Station.TStationType) => {
+  const handleShowStation = useCallback((type: Station.TStationType) => {
     setCurrentStationType(type);
     setShowStation(true)
-  }
+  }, [])
 
-  const switchStations = () => {
+  const switchStations = useCallback(() => {
     setStorage('config', { fromStation: currentToStation.id, toStation: currentFromStation.id });
     setStorage('tickets', []);
     setSwitchCount(switchCount + 1)
-  }
+  }, [switchCount])
 
-  const closeModal=()=>{
+  const closeModal = useCallback(() => {
     setModal({
       ...modal,
-      visible:false
+      visible: false
     })
-  }
+  }, [modal])
 
-  const getIps = (number: number): string[] => {
+  const getIps = useCallback((number: number): string[] => {
     const ips = [];
     const { availableIps } = (window as any);
     const availableIpsCopy = [...availableIps];
@@ -98,25 +101,47 @@ function Main({ history }: IProp) {
       ips.push(availableIpsCopy.splice(getRandom(0, length - 1), 1)[0])
     }
     return ips
-  };
+  }, []);
 
-  const getTimeout=()=>{
-    const now=new Date();
-    const year=now.getFullYear();
-    const month=now.getMonth();
-    const date=now.getDate();
-    const hours=now.getHours();
-    const startTime= hours>=23 ? new Date(year, month, date+1, 7) : new Date(year, month, date, 7);
-    return startTime.getTime()-now.getTime()
-  }
+  const getTimeout = useCallback(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const date = now.getDate();
+    const hours = now.getHours();
+    const startTime = hours >= 23 ? new Date(year, month, date + 1, 7) : new Date(year, month, date, 7);
+    return startTime.getTime() - now.getTime()
+  }, [])
 
-  const handleSetMessage = (message: string) => {
+  const handleSetMessage = useCallback((message: string) => {
     setMessage(shouldRequire ? message : '')
-  }
+  }, [shouldRequire]);
 
-  const autoGetRestTicketsRes = () => {
+  const toggleExecute = useCallback(() => {
+    if (timer) {
+      clearTimeout(getTimerConstant());
+      setTimer(null)
+    } else {
+      setHasSubmit(true);
+      if (shouldRequire) {
+        setShouldRequire(false)
+      } else {
+        const gap = time.getTime() - Date.now();
+        if (gap > 0) {
+          setTimer(setTimeout(() => {
+            setShouldRequire(true)
+            setTimer(null)
+          }, gap))
+        } else {
+          setShouldRequire(true)
+        }
+      }
+    }
+  }, [timer, shouldRequire]);
+
+  const autoGetRestTicketsRes = useCallback(() => {
     const handleGetRestTicketsRes = async (): Promise<any[]> => {
-      if (!shouldRequireRef.current) {
+      if (!getShouldRequireConstant()) {
         return []
       } else {
         handleSetMessage(`正在进行第${requireCountRef.current += 1}次抢票`);
@@ -140,45 +165,24 @@ function Main({ history }: IProp) {
       }
     };
     return handleGetRestTicketsRes()
-  }
-
-  const toggleExecute = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      setTimer(null)
-    } else {
-      setHasSubmit(true);
-      if (shouldRequireRef.current) {
-        setShouldRequire(false)
-      } else {
-        const gap = time.getTime() - Date.now();
-        if (gap > 0) {
-          setTimer(setTimeout(() => {
-            setShouldRequire(true)
-            setTimer(null)
-          }, gap))
-        } else {
-          setShouldRequire(true)
-        }
-      }
-    }
-  }
+  }, [])
 
   useEffect(() => {
     (async () => {
       setSelectedTickets(getStorage('tickets', '', []))
       const handleGetPassengers = async () => {
-        const getPassengersRes = await getPassengers();
-        if (getPassengersRes.status) {
-          setPassengers(getPassengersRes.data)
+        const [getPassengersRes, getUserInfoRes] = await Promise.all([getPassengers(), getUserInfo()]);
+        if (getPassengersRes.status && getUserInfoRes.status) {
+          setPassengers(getPassengersRes.data);
+          setUserInfo(getUserInfoRes.data)
         } else {
           const autoLoginRes = await autoLogin();
           if (autoLoginRes) {
             await handleGetPassengers()
           } else {
             history.push({
-              pathname:'/login',
-              query:{redirect:'/main'}
+              pathname: '/login',
+              query: { redirect: '/main' }
             })
           }
         }
@@ -194,11 +198,10 @@ function Main({ history }: IProp) {
       40000: true,
       60001: true,
     }
-    shouldRequireRef.current = shouldRequire;
     const autoSubmit = async (): Promise<void> => {
       if (shouldRequire) {
-        const hour=new Date().getHours()
-        if(hour>7 && hour<23){
+        const hour = new Date().getHours()
+        if (hour > 7 && hour < 23) {
           const matchedTickets = await autoGetRestTicketsRes();
           if (matchedTickets.length) {
             handleSetMessage(`正在提交订单`);
@@ -245,18 +248,18 @@ function Main({ history }: IProp) {
             text: '将在7:00自动抢票',
             footer: [{
               text: '确定',
-              onPress: ()=>{
+              onPress: () => {
                 closeModal();
                 setTimer(setTimeout(() => {
                   setShouldRequire(true)
                   setTimer(null)
                 }, getTimeout()))
               }
-            },{
+            }, {
               text: '取消',
-              onPress:()=>{
+              onPress: () => {
                 closeModal()
-              } 
+              }
             }]
           });
         }
@@ -268,10 +271,6 @@ function Main({ history }: IProp) {
     }
     autoSubmit()
   }, [shouldRequire]);
-
-  useEffect(() => {
-    timerRef.current = timer
-  }, [timer]);
 
   useEffect(() => {
     if (hasSubmit && !showPassenger && !showSeat) {
@@ -288,7 +287,10 @@ function Main({ history }: IProp) {
       <div className="main-header">
         <NavBar
           mode="dark"
-          icon={<Icon type="left" onClick={()=>{history.push('/login')}} />}
+          icon={<Icon type="left" onClick={() => { history.push('/login') }} />}
+          rightContent={[
+            <div key="username" className="main-header-username">{getFirstName(userInfo.user_name)}</div>,
+          ]}
         >
           Ticket
         </NavBar>

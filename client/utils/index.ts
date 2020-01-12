@@ -119,7 +119,14 @@ export const dateFormat = (date: Date, format = 'yyyy-MM-dd HH:mm:ss') => {
   return format;
 }
 
-export const getType = (value: any): string => Object.prototype.toString.call(value).replace(/\[|\]|object|\s/g, '').toLowerCase()
+export const getType = (value: any): string => Object.prototype.toString.call(value).replace(/\[|\]|object|\s/g, '').toLowerCase();
+
+export const getFirstName = (name: string) => {
+  if (name.length > 2) {
+    return name.substring(name.length - 2)
+  }
+  return name.substring(1)
+}
 
 export const getStorage = (key: string, props?: string, defaultValue?: any) => {
   const data = window.localStorage.getItem(key);

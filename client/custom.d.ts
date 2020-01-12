@@ -28,10 +28,16 @@ declare namespace Passenger {
 	}
 }
 
+declare namespace UserInfo {
+	interface IUserInfo {
+		user_name: string
+	}
+}
+
 declare namespace Ticket {
 	interface ITicket {
 		id: string,
-		saleTime:string,
+		saleTime: string,
 		secretStr: string,
 		train: string,
 		fromName: string,

@@ -22,8 +22,12 @@ require('./helpers/logger');
 const env = process.env.NODE_ENV || 'dev';
 const app = new Koa();
 const serverConfig = getConfig().server || {};
+const { port, protocol } = serverConfig;
 
-app.use(sslify());
+if (protocol === 'https') {
+  app.use(sslify());
+}
+
 app.use(helmet());
 app.use(views(resolve('dist'), { map: { html: 'ejs' } }));
 app.use(serve(resolve('dist')));
@@ -62,8 +66,6 @@ if (env === 'dev') {
   })));
   app.use(convert(hotMiddleware(compiler)));
 }
-
-const { port, protocol } = serverConfig;
 
 if (protocol === 'https') {
   const httpsOptions = {

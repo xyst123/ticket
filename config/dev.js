@@ -138,11 +138,11 @@ module.exports = {
           '^/otn/api/order/waitTime': '/otn/confirmPassenger/queryOrderWaitTime',
         },
       },
-      '/otn/api/order/aaa': {
+      '/otn/api/user/info': {
         target: 'https://kyfw.12306.cn',
         changeOrigin: true,
         pathRewrite: {
-          '^/otn/api/order/aaa': '/otn/leftTicket/queryA',
+          '^/otn/api/user/info': '/otn/index/initMy12306Api',
         },
       },
     },

@@ -34,11 +34,7 @@ export default ({ passengers, childRef }: IProp) => {
     }
   },[currentSelectedPassengers])
 
-  useImperativeHandle(childRef, () => ({
-    submit() {
-      setStorage('passengers', currentSelectedPassengers.map(currentSelectedPassenger => currentSelectedPassenger.allEncStr));
-    }
-  }));
+  useImperativeHandle(childRef, () => (currentSelectedPassengers.map(currentSelectedPassenger => currentSelectedPassenger.allEncStr)));
 
   return (
     <List className="passenger">

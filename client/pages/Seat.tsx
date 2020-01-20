@@ -33,11 +33,7 @@ export default ({ childRef }: IProp) => {
 		}
 	},[currentSelectedSeats]) 
 
-	useImperativeHandle(childRef, () => ({
-		submit() {
-			setStorage('seats', currentSelectedSeats);
-		}
-	}));
+	useImperativeHandle(childRef, () => currentSelectedSeats);
 
 	return (
 		<List className="seat">

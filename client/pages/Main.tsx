@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef,useMemo, useCallback } from 'react';
 import { withRouter } from 'react-router-dom';
 import { WingBlank, WhiteSpace, NoticeBar, Card, Icon, Button, Modal, NavBar, Tag, Toast } from 'antd-mobile';
 import useConstant from '@/hooks/constant';
+import useLocalStorage from '@/hooks/localStorage';
 import TicketItem from '@/components/TicketItem';
 import PassengerItem from '@/components/PassengerItem';
 import Station from './Station';
@@ -34,14 +35,15 @@ function Main({ history }: IProp) {
 
   const [timer, getTimerConstant, setTimer] = useConstant<any>(null);
   const [shouldRequire, getShouldRequireConstant, setShouldRequire] = useConstant(false);
-
-  const [currentStationType, setCurrentStationType] = useState<Station.TStationType>('from');
-  const [showStation, setShowStation] = useState(false);
-  const [showDate, setShowDate] = useState(false);
-  const [selectedTickets, setSelectedTickets] = useState<Ticket.ITicket[]>([]);
+  const [selectedTickets, setSelectedTickets] = useLocalStorage<Ticket.ITicket[]>('tickets', '', []);
+  const [selectedPassengerIds,setSelectedPassengerIds] = useLocalStorage<string[]>('passengers', '', []); 
+  const [selectedSeats, setSelectedSeats] = useLocalStorage<string[]>('seats', '', []); 
   const [showPassenger, setShowPassenger] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   const [showSeat, setShowSeat] = useState(false);
+  const [showStation, setShowStation] = useState(false);
+  const [showDate, setShowDate] = useState(false);
+  const [currentStationType, setCurrentStationType] = useState<Station.TStationType>('from');
   const [passengers, setPassengers] = useState<Passenger.IPassenger[]>([]);
   const [userInfo, setUserInfo] = useState<UserInfo.IUserInfo>({ user_name: "" });
   const [message, setMessage] = useState('');
@@ -64,15 +66,16 @@ function Main({ history }: IProp) {
     footer: []
   });
 
-  const time = getTime();
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');
+  const time = getTime();
   const currentDate = getDate();
   const period = parseInt(getStorage('config', 'period', 3));
   const ipNumber = parseInt(getStorage('config', 'ipNumber',
     3));
-  const selectedSeats: string[] = getStorage('seats', '', []);
-  const selectedPassengers = passengers.filter(passenger => getStorage('passengers', '', []).includes(passenger.allEncStr));
+
+  // 衍生值
+  const selectedPassengers=useMemo(()=>passengers.filter(passenger => selectedPassengerIds.includes(passenger.allEncStr)),[passengers,selectedPassengerIds]);
 
   const handleShowStation = useCallback((type: Station.TStationType) => {
     setCurrentStationType(type);
@@ -81,7 +84,7 @@ function Main({ history }: IProp) {
 
   const switchStations = useCallback(() => {
     setStorage('config', { fromStation: currentToStation.id, toStation: currentFromStation.id });
-    setStorage('tickets', []);
+    setSelectedTickets('tickets', [])
     setSwitchCount(switchCount + 1)
   }, [switchCount])
 
@@ -114,8 +117,12 @@ function Main({ history }: IProp) {
   }, [])
 
   const handleSetMessage = useCallback((message: string) => {
-    setMessage(shouldRequire ? message : '')
+    setMessage(getShouldRequireConstant() ? message : '')
   }, [shouldRequire]);
+
+  const showError=useCallback((type:string)=>{
+    return hasSubmit && errors[type]
+  },[hasSubmit,errors])
 
   const toggleExecute = useCallback(() => {
     if (timer) {
@@ -125,7 +132,7 @@ function Main({ history }: IProp) {
       setHasSubmit(true);
       if (shouldRequire) {
         setShouldRequire(false)
-      } else {
+      } else if(Object.values(errors).every(item=>!item)){
         const gap = time.getTime() - Date.now();
         if (gap > 0) {
           setTimer(setTimeout(() => {
@@ -137,7 +144,7 @@ function Main({ history }: IProp) {
         }
       }
     }
-  }, [timer, shouldRequire]);
+  }, [timer, shouldRequire,errors]);
 
   const autoGetRestTicketsRes = useCallback(() => {
     const handleGetRestTicketsRes = async (): Promise<any[]> => {
@@ -169,7 +176,6 @@ function Main({ history }: IProp) {
 
   useEffect(() => {
     (async () => {
-      setSelectedTickets(getStorage('tickets', '', []))
       const handleGetPassengers = async () => {
         const [getPassengersRes, getUserInfoRes] = await Promise.all([getPassengers(), getUserInfo()]);
         if (getPassengersRes.status && getUserInfoRes.status) {
@@ -273,14 +279,12 @@ function Main({ history }: IProp) {
   }, [shouldRequire]);
 
   useEffect(() => {
-    if (hasSubmit && !showPassenger && !showSeat) {
-      setErrors({
-        selectedTickets: !selectedTickets.length,
-        selectedPassengers: !selectedPassengers.length,
-        selectedSeats: !selectedSeats.length
-      })
-    }
-  }, [hasSubmit, selectedTickets, showPassenger, showSeat]);
+    setErrors({
+      selectedTickets: !selectedTickets.length,
+      selectedPassengers: !selectedPassengers.length,
+      selectedSeats: !selectedSeats.length
+    })
+  }, [selectedTickets, passengers,selectedPassengerIds, selectedSeats]);
 
   return (
     <div>
@@ -289,7 +293,7 @@ function Main({ history }: IProp) {
           mode="dark"
           icon={<Icon type="left" onClick={() => { history.push('/login') }} />}
           rightContent={[
-            <div key="username" className="main-header-username">{getFirstName(userInfo.user_name)}</div>,
+            <div key="username" className="main-header-username" onClick={()=>{history.push('/login')}}>{getFirstName(userInfo.user_name)}</div>,
           ]}
         >
           Ticket
@@ -301,7 +305,6 @@ function Main({ history }: IProp) {
         }
       </div>
 
-      {/* TODO  */}
       <WingBlank className="main-body" style={{ paddingTop: `${message ? 25.6 : 16}vw` }}>
         <Card>
           <Card.Header
@@ -318,7 +321,7 @@ function Main({ history }: IProp) {
               <h3 onClick={handleShowStation.bind(null, 'to')}>{currentToStation.chinese || '目的地'}</h3>
             </div>
             <p className="main-body-ticket-date" onClick={setShowDate.bind(null, true)}>{dateFormat(currentDate, 'yyyy-MM-dd')}</p>
-            {selectedTickets.length > 0 ? selectedTickets.map(selectedTicket => (<TicketItem key={`ticket-${selectedTicket.id}`} ticket={selectedTicket} brief />)) : <p className={errors.selectedTickets ? "error-text" : "placeholder"}>请选择车次</p>}
+            {selectedTickets.length > 0 ? selectedTickets.map(selectedTicket => (<TicketItem key={`ticket-${selectedTicket.id}`} ticket={selectedTicket} brief />)) : <p className={showError('selectedTickets') ? "error-text" : "placeholder"}>请选择车次</p>}
           </Card.Body>
         </Card>
         <Modal
@@ -363,7 +366,7 @@ function Main({ history }: IProp) {
             onClick={() => setShowPassenger(true)}
           />
           <Card.Body className="main-body-passenger">
-            {selectedPassengers.length > 0 ? selectedPassengers.map(passenger => (<PassengerItem key={`passenger-${passenger.allEncStr}`} passenger={passenger} />)) : <p className={errors.selectedPassengers ? "error-text" : "placeholder"}>请选择乘车人</p>}
+            {selectedPassengers.length > 0 ? selectedPassengers.map(passenger => (<PassengerItem key={`passenger-${passenger.allEncStr}`} passenger={passenger} />)) : <p className={showError('selectedPassengers') ? "error-text" : "placeholder"}>请选择乘车人</p>}
           </Card.Body>
         </Card>
         <Modal
@@ -377,7 +380,8 @@ function Main({ history }: IProp) {
             mode="dark"
             icon={<Icon type="cross" onClick={() => setShowPassenger(false)} />}
             rightContent={[
-              <p key="finish" onClick={() => { passengerRef.current.submit(); setShowPassenger(false) }}>完成</p>,
+              <p key="finish" onClick={() => { 
+                setSelectedPassengerIds('passengers',passengerRef.current); setShowPassenger(false) }}>完成</p>,
             ]}
           >
             选择乘车人
@@ -396,7 +400,7 @@ function Main({ history }: IProp) {
             onClick={() => setShowSeat(true)}
           />
           <Card.Body>
-            {selectedSeats.length > 0 ? selectedSeats.map(seat => (<Tag key={`seat-${seat}`} className="main-body-seat-item">{seatMap[seat]}</Tag>)) : <p className={errors.selectedSeats ? "error-text" : "placeholder"}>请选择席别</p>}
+            {selectedSeats.length > 0 ? selectedSeats.map(seat => (<Tag key={`seat-${seat}`} className="main-body-seat-item">{seatMap[seat]}</Tag>)) : <p className={showError('selectedSeats') ? "error-text" : "placeholder"}>请选择席别</p>}
           </Card.Body>
         </Card>
         <Modal
@@ -410,7 +414,7 @@ function Main({ history }: IProp) {
             mode="dark"
             icon={<Icon type="cross" onClick={() => setShowSeat(false)} />}
             rightContent={[
-              <p key="finish" onClick={() => { seatRef.current.submit(); setShowSeat(false) }}>完成</p>,
+              <p key="finish" onClick={() => { setSelectedSeats('seats',seatRef.current); setShowSeat(false) }}>完成</p>,
             ]}
           >
             选择席别

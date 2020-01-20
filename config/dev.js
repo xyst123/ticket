@@ -17,8 +17,8 @@ module.exports = {
     ],
   },
   server: {
-    protocol: 'https',
-    port: 3006,
+    protocol: 'http',
+    port: 3007,
     enableStaticCache: false,
     enableMock: false,
     // TODO

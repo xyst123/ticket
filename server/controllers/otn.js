@@ -61,11 +61,11 @@ const handleTicketRes = (ticketRes) => {
 }
 
 const getMatchedTickets = (tickets, selectedTickets, selectedSeats) => tickets.filter(ticket => {
-	const ticketFit = Boolean(selectedTickets.filter(selectedTicket => selectedTicket === ticket.id).length)
-	const seatFit = Boolean(selectedSeats.filter(selectedSeat => {
+	const ticketFit = selectedTickets.some(selectedTicket => selectedTicket === ticket.id);
+	const seatFit =selectedSeats.some(selectedSeat => {
 		const rest = ticket.seats[selectedSeat];
 		return rest && rest !== '无' && rest !== '*'
-	}).length)
+	});
 	return ticketFit && seatFit
 })
 

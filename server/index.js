@@ -1,17 +1,16 @@
 const fs = require('fs');
+const path=require('path');
 const https = require('https');
 const http = require('http');
 const Koa = require('koa');
 const sslify = require('koa-sslify').default;
 const views = require('koa-views');
-const convert = require('koa-convert');
 const serve = require('koa-static');
 const helmet = require('koa-helmet');
 const bodyParser = require('koa-bodyparser');
 const proxy = require('koa-server-http-proxy');
 const router = require('koa-router')();
-const devMiddleware = require('koa-webpack-dev-middleware');
-const hotMiddleware = require('koa-webpack-hot-middleware');
+const koaWebpack=require('koa-webpack');
 const webpack = require('webpack');
 const webpackMainConfig = require('../build/webpack.main.config');
 const composeRoutes = require('./middlewares/composeRouter');
@@ -49,22 +48,16 @@ app.use(clientRoute);
 
 if (env === 'dev') {
   const compiler = webpack(webpackMainConfig);
-  compiler.plugin('emit', (compilation, callback) => {
-    const { assets } = compilation;
-    iterateObject(assets, (value, key) => {
-      if (key.match(/\.html$/)) {
-        const file = resolve(`dist/${key}`);
-        const data = assets[key].source();
-        fs.writeFileSync(file, data);
-      }
+  const useKoaWebpack=async()=>{
+    const middleware=await koaWebpack({ compiler })
+    app.use(middleware);
+    app.use(async (ctx) => {
+      const filename = path.resolve(webpackMainConfig.output.path, 'index.html')
+      ctx.response.type = 'html'
+      ctx.response.body = middleware.devMiddleware.fileSystem.createReadStream(filename)
     });
-    callback();
-  });
-  app.use(convert(devMiddleware(compiler, {
-    noInfo: true,
-    publicPath: webpackMainConfig.output.publicPath,
-  })));
-  app.use(convert(hotMiddleware(compiler)));
+  }
+  useKoaWebpack(0)
 }
 
 if (protocol === 'https') {

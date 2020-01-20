@@ -12,13 +12,11 @@ const envBuildConfig = envConfig.build || {};
 const happyThreadPool = HappyPack.ThreadPool({ size: os.cpus().length });
 
 const baseConfig = {
-  entry: {
-    index: resolve('client/index.tsx'),
-  },
+  entry: [resolve('client/index.tsx')],
   output: {
     path: resolve('dist'),
     publicPath: '/',
-    filename: '[name].[chunkhash].js',
+    filename: '[name].[hash].js',
   },
   resolve: {
     modules: [resolve('node_modules')],

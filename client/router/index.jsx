@@ -14,26 +14,39 @@ const Ticket= Loadable({
   loading:()=>(<div>Loading...</div>)
 });
 
-export const routes = [
-  {
+const defaultRoute = {
     path: '/main',
-    component: Main
-  }, {
+    component: Main,
+    title:'Ticket',
+    auth:true,
+  }
+const routes = [
+  defaultRoute, {
     path: '/login',
     component: Login,
+    title:'登录',
+    auth:true,
   }, {
     path: '/ticket',
     component: Ticket,
+    title:'选择车次',
+    auth:true,
   }
 ]
 
 export const Routes = () => (
   <Router routes={routes}>
     <Switch>
-      <Route path='/' exact render={()=> (<Redirect to='/main'/>)}/>
-      {routes.map((route, index) => (
-        <Route key={`route-${index}`} path={route.path} exact render={() => <route.component />} />
-      ))}
+      <Route path='/' exact render={()=> (<Redirect to={defaultRoute.path}/>)}/>
+      {routes.map((route, index) =>{
+        const currentRoute=route.auth?route:defaultRoute;
+        return (
+        <Route key={`route-${index}`} path={currentRoute.path} exact render={() =>{
+          const title=currentRoute.title;
+          document.title=title;
+          return <currentRoute.component title={title} />
+        }} />
+      )})}
     </Switch>
   </Router>
 );

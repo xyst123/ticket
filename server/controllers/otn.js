@@ -60,14 +60,28 @@ const handleTicketRes = (ticketRes) => {
 	return []
 }
 
-const getMatchedTickets = (tickets, selectedTickets, selectedSeats) => tickets.filter(ticket => {
-	const ticketFit = selectedTickets.some(selectedTicket => selectedTicket === ticket.id);
-	const seatFit =selectedSeats.some(selectedSeat => {
-		const rest = ticket.seats[selectedSeat];
-		return rest && rest !== '无' && rest !== '*'
-	});
-	return ticketFit && seatFit
-})
+const getMatchedTickets = (tickets, selectedTickets, selectedSeats) =>{
+	const matchedTickets=[];
+	const alternateTickets=[];
+	tickets.forEach(ticket => {
+		const ticketFit = selectedTickets.some(selectedTicket => selectedTicket === ticket.id);
+		const seatFit =selectedSeats.some(selectedSeat => {
+			const rest = ticket.seats[selectedSeat];
+			return rest && rest !== '无' && rest !== '*'
+		});
+
+		if(ticketFit && seatFit){
+			matchedTickets.push(ticket)
+		}
+		if(ticketFit && !seatFit){
+			alternateTickets.push(ticket)
+		}
+	})
+	return {
+		matchedTickets,
+		alternateTickets
+	}
+}
 
 router.get('/restTickets', async (ctx) => {
 	let code = 0;
@@ -114,13 +128,13 @@ router.get('/restTickets', async (ctx) => {
 					code = 60000;
 					resolve([])
 				}
+				const {matchedTickets,alternateTickets} = getMatchedTickets(tickets, selectedTickets, selectedSeats);
 
-				const matchedTickets = getMatchedTickets(tickets, selectedTickets, selectedSeats);
 				if (matchedTickets.length) {
 					resolve(matchedTickets)
 				} else {
 					code = 60001;
-					reject(matchedTickets)
+					reject(alternateTickets)
 				}
 			})))
 		)

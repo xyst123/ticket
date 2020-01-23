@@ -111,6 +111,11 @@ const baseConfig = {
       threadPool: happyThreadPool,
     }),
     new HtmlWebpackPlugin({
+      minify: { 
+        removeComments: true,
+        collapseWhitespace: true,
+        minifyCSS: true
+      },
       filename: 'index.html',
       template: resolve('server/views/template.html'),
     }),

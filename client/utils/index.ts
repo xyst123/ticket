@@ -162,3 +162,10 @@ export const setStorage = (key: string, value: any, assign: boolean = true) => {
 export const getRandom = (from: number, to: number): number => {
   return parseInt(String(from + (to - from) * Math.random()), 10)
 }
+
+export const delay=async <T>(callback:Function,time:number):Promise<T>=>{
+  await new Promise(resolve => {
+    setTimeout(() => { resolve() }, time)
+  })
+  return callback()
+}

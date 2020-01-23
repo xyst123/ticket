@@ -10,11 +10,7 @@ import '@/style/Ticket.less';
 
 const { CheckboxItem } = Checkbox;
 
-interface IProp {
-  history: any
-}
-
-function Ticket({ history }: IProp) {
+function Ticket({ title,history }: any) {
   const selectedTickets: Ticket.ITicket[] = getStorage('tickets', '', []);
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');
@@ -74,7 +70,7 @@ function Ticket({ history }: IProp) {
           <p key="finish" onClick={submit}>完成</p>
         ]}
       >
-        选择车次
+        {title}
       </NavBar>
       <List className="ticket-list">
         {tickets.map(ticket => (

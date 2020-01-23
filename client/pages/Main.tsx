@@ -14,25 +14,19 @@ import { getRestTickets } from '@/service/ticket';
 import { getPassengers } from '@/service/passenger';
 import { getUserInfo } from '@/service/user';
 import { autoLogin } from '@/service/passport';
-import { submitOrder, autoQueryStatus } from '@/service/order';
-import { getStorage, setStorage, dateFormat, getRandom, getFirstName } from '@/utils';
+import {submitAlternate, submitOrder, autoQueryStatus } from '@/service/order';
+import { getStorage, setStorage, dateFormat, getRandom, getFirstName, delay} from '@/utils';
 import { getStation } from '@/utils/station';
 import { getDate } from "@/utils/date";
 import { getTime } from "@/utils/others";
 import { seatMap } from '@/config/seat';
 import '@/style/Main.less';
 
-interface IProp {
-  history: any
-}
-
-function Main({ history }: IProp) {
+function Main({title, history }: any) {
   const passengerRef: RefObject<any> = useRef();
   const seatRef: RefObject<any> = useRef();
   const othersRef: RefObject<any> = useRef();
-
   const requireCountRef: RefObject<number> = useRef(0);
-
   const [timer, getTimerConstant, setTimer] = useConstant<any>(null);
   const [shouldRequire, getShouldRequireConstant, setShouldRequire] = useConstant(false);
   const [selectedTickets, setSelectedTickets] = useLocalStorage<Ticket.ITicket[]>('tickets', '', []);
@@ -70,6 +64,7 @@ function Main({ history }: IProp) {
   const currentToStation = getStation('to');
   const time = getTime();
   const currentDate = getDate();
+  const alternate = getStorage('config', 'alternate', false);
   const period = parseInt(getStorage('config', 'period', 3));
   const ipNumber = parseInt(getStorage('config', 'ipNumber',
     3));
@@ -80,7 +75,7 @@ function Main({ history }: IProp) {
   const handleShowStation = useCallback((type: Station.TStationType) => {
     setCurrentStationType(type);
     setShowStation(true)
-  }, [])
+  }, []);
 
   const switchStations = useCallback(() => {
     setStorage('config', { fromStation: currentToStation.id, toStation: currentFromStation.id });
@@ -147,6 +142,22 @@ function Main({ history }: IProp) {
   }, [timer, shouldRequire,errors]);
 
   const autoGetRestTicketsRes = useCallback(() => {
+    const handleSubmitAlternateRes=async (selectedTickets:Ticket.ITicket[]): Promise<any> => {
+      handleSetMessage(`正在添加候补订单`);
+      const submitAlternateRes=await submitAlternate({
+        selectedTickets,
+        selectedPassengers,
+        selectedSeats
+      });
+      const { status } = submitAlternateRes;
+      if(status){
+        handleSetMessage(`添加候补订单成功，请到订单列表查看`);
+      }else {
+        handleSetMessage(`添加候补订单失败`);
+      }
+      return delay(handleGetRestTicketsRes,period * 1000)
+    }
+
     const handleGetRestTicketsRes = async (): Promise<any[]> => {
       if (!getShouldRequireConstant()) {
         return []
@@ -164,15 +175,13 @@ function Main({ history }: IProp) {
         if (status) {
           return data;
         } else {
-          await new Promise(resolve => {
-            setTimeout(() => { resolve() }, period * 1000)
-          })
-          return handleGetRestTicketsRes()
+         return delay(requireCountRef.current===1 && alternate?handleSubmitAlternateRes.bind(null,data):handleGetRestTicketsRes,period * 1000)
         }
       }
     };
+
     return handleGetRestTicketsRes()
-  }, [])
+  }, [selectedPassengers])
 
   useEffect(() => {
     (async () => {
@@ -296,7 +305,7 @@ function Main({ history }: IProp) {
             <div key="username" className="main-header-username" onClick={()=>{history.push('/login')}}>{getFirstName(userInfo.user_name)}</div>,
           ]}
         >
-          Ticket
+          {title}
         </NavBar>
         {
           message ? (
@@ -434,6 +443,7 @@ function Main({ history }: IProp) {
           />
           <Card.Body>
             <ul className="main-body-others">
+              <li>候补优先：{alternate?'是':'否'}</li>
               <li>查询余票周期：{period}秒</li>
               <li>每次请求ip数：{ipNumber}</li>
               <li>抢票开始时间：{dateFormat(time, 'yyyy-MM-dd HH:mm')}</li>

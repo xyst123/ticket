@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useImperativeHandle } from 'react';
-import { Stepper, DatePickerView } from 'antd-mobile';
+import {Switch, Stepper, DatePickerView } from 'antd-mobile';
 import { getStorage, setStorage } from "@/utils";
 import { getTime } from "@/utils/others";
 import '@/style/Others.less';
@@ -10,7 +10,7 @@ interface IProp {
 
 export default ({ childRef }: IProp) => {
   const now = new Date();
-
+  const [alternate, setAlternate] = useState(getStorage('config', 'alternate', false));
   const [period, setPeriod] = useState(getStorage('config', 'period', 3));
   const [ipNumber, setIpNumber] = useState(getStorage('config', 'ipNumber', 3));
   const [time, setTime] = useState(getTime());
@@ -22,6 +22,7 @@ export default ({ childRef }: IProp) => {
   useImperativeHandle(childRef, () => ({
     submit() {
       setStorage('config', {
+        alternate,
         period,
         ipNumber,
         time: time.getTime()
@@ -31,6 +32,13 @@ export default ({ childRef }: IProp) => {
 
   return (
     <ul className="others">
+      <li>
+        <h4>候补优先</h4>
+        <Switch
+          checked={alternate}
+          onChange={(checked)=>{setAlternate(checked)}}
+        />
+      </li>
       <li>
         <h4>查询余票周期（秒）</h4>
         <Stepper

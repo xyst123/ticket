@@ -17,6 +17,7 @@ const composeRoutes = require('./middlewares/composeRouter');
 const clientRoute = require('./middlewares/clientRoute');
 const { resolve, iterateObject, getConfig } = require('../utils');
 require('./helpers/logger');
+require('events').EventEmitter.defaultMaxListeners = 0
 
 const env = process.env.NODE_ENV || 'dev';
 const app = new Koa();

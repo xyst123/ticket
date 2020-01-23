@@ -145,6 +145,20 @@ module.exports = {
           '^/otn/api/user/info': '/otn/index/initMy12306Api',
         },
       },
+      '/otn/api/alternate/confirm': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/api/alternate/confirm': '/otn/afterNate/confirmHB',
+        },
+      },
+      '/otn/api/alternate/status': {
+        target: 'https://kyfw.12306.cn',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/otn/api/alternate/status': '/otn/afterNate/queryQueue',
+        },
+      },
     },
   },
   build: {

@@ -1,14 +1,80 @@
 import { request, handleRes, dateFormat, get, iterateObject } from "@/utils";
 import validate from "@/utils/validate";
 
-interface IData {
+interface IAlternateData {
+  selectedTickets: Ticket.ITicket[],
+  selectedPassengers: Passenger.IPassenger[],
+  selectedSeats: string[]
+}
+export const submitAlternate=async (data: IAlternateData):Promise<Common.IRes>=>{
+  const message = {
+    '-1': '提交候补订单失败',
+  }
+  try{
+    const { selectedTickets, selectedPassengers, selectedSeats } = data;
+    const ticketAndSeats:{ticket:string,seat:string}[]= [];
+    selectedTickets.forEach(selectedTicket=>{
+      let seat='';
+      if(selectedSeats.length){
+        for(let selectedSeat of selectedSeats){
+          const rest = selectedTicket.seats[selectedSeat];
+          if(rest==='无'){
+            seat=selectedSeat;
+            break
+          }
+        }
+      }else {
+        for(let ticketSeat in selectedTicket.seats){
+          const rest=selectedTicket.seats[ticketSeat];
+          if(rest==='无'){
+            seat=ticketSeat;
+            break
+          }
+        }
+      }
+      if(seat && ticketAndSeats.length<3){
+        ticketAndSeats.push({
+          ticket:selectedTicket.id,
+          seat
+        })
+      }
+    })
+    const submitRes = await request<{ status: boolean }>({
+      method: 'POST',
+      url: '/otn/api/alternate/confirm',
+      type: 'form',
+      data: {
+        passengerInfo:selectedPassengers.map(selectedPassenger=>`1#${selectedPassenger.passenger_name}#1#${selectedPassenger.passenger_id_no}#${selectedPassenger.allEncStr}#0;`).join(''),
+        jzParam:`${dateFormat(new Date(Date.now()+24*60*60*1000*10),'yyyy-MM-dd')}#23#30`,
+        hbTrain:ticketAndSeats.map(ticketAndSeat=>`${ticketAndSeat.ticket},${ticketAndSeat.seat}#`).join(''),
+        lkParam:'',
+        sessionId:'',
+        sig:'',
+        scene:'nc_login'	
+      }
+    });
+    const checkSubmitRes = handleRes(submitRes, message)
+    if (!checkSubmitRes.status || !submitRes.status) {
+      checkSubmitRes.status=false
+      return checkSubmitRes;
+    }
+    const statusRes=await request<{ messages: string[] }>({
+      method: 'POST',
+      url: '/otn/api/alternate/status',
+    });
+    return handleRes(statusRes, message)
+  }catch(error){
+    return handleRes(error, message)
+  }
+}
+
+interface IOrderData {
   tickets: Ticket.ITicket[],
   date: Date,
   passengers: Passenger.IPassenger[],
   seats: string[]
 }
-
-export const submitOrder = async (data: IData): Promise<Common.IRes> => {
+export const submitOrder = async (data: IOrderData): Promise<Common.IRes> => {
   const message = {
     '-1': '提交订单失败',
     '40000': '请填写必要的信息',
@@ -17,7 +83,6 @@ export const submitOrder = async (data: IData): Promise<Common.IRes> => {
   }
   try {
     const { tickets, date, passengers, seats } = data;
-
     const passRes = validate.check([
       {
         value: tickets,

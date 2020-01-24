@@ -23,6 +23,6 @@ module.exports = {
     },
   },
   build: {
-    extract: true,
+    extract: false,
   },
 };

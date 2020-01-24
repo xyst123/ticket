@@ -4935,10 +4935,10 @@ koa-views@^6.2.1:
     mz "^2.4.0"
     pretty "^2.0.0"
 
-koa-webpack@^5.2.4:
-  version "5.2.4"
-  resolved "https://registry.npmjs.org/koa-webpack/-/koa-webpack-5.2.4.tgz#817b67655e36ca9942c3cae93f6572d5898732cd"
-  integrity sha512-NQmX3p65P2Y0sb7WonkfbZRPGrvQYCGjcr4kp9k/hp6GhnZcvY+ZP+LHH4FWvxaCG63nPEx2S2p9jHmH4ErsVw==
+koa-webpack@^5.2.5:
+  version "5.2.5"
+  resolved "https://registry.npmjs.org/koa-webpack/-/koa-webpack-5.2.5.tgz#d6855bed7cf14b8e16baff07d7e058a30338bbc5"
+  integrity sha512-0+Wn8dHRoKqORybYYROb4aYfpHXg+TqfxTgwxcWHgRIrPi3SLMf6pzvlgYBPWXULAN1cW1tGCh1iXho2Ez6E3Q==
   dependencies:
     "@hapi/joi" "^15.0.0"
     app-root-path "^2.0.1"

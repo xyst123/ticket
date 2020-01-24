@@ -14,7 +14,6 @@ const koaWebpack=require('koa-webpack');
 const webpack = require('webpack');
 const webpackMainConfig = require('../build/webpack.main.config');
 const composeRoutes = require('./middlewares/composeRouter');
-const clientRoute = require('./middlewares/clientRoute');
 const { resolve, iterateObject, getConfig } = require('../utils');
 require('./helpers/logger');
 require('events').EventEmitter.defaultMaxListeners = 0
@@ -45,20 +44,34 @@ app.use(bodyParser());
 app.use(composeRoutes(`${__dirname}/controllers`).routes());
 app.use(router.allowedMethods());
 
-app.use(clientRoute);
-
 if (env === 'dev') {
   const compiler = webpack(webpackMainConfig);
   const useKoaWebpack=async()=>{
-    const middleware=await koaWebpack({ compiler })
-    app.use(middleware);
-    app.use(async (ctx) => {
-      const filename = path.resolve(webpackMainConfig.output.path, 'index.html')
-      ctx.response.type = 'html'
-      ctx.response.body = middleware.devMiddleware.fileSystem.createReadStream(filename)
+    try{
+      const middleware=await koaWebpack({ 
+        compiler,
+        devMiddleware:{},
+        hotClient:{
+          host:'127.0.0.1',
+          port:5008
+        }
+       });
+      app.use(middleware);
+      app.use(async (ctx) => {
+      const filename = path.resolve(webpackMainConfig.output.path, 'index.html');
+      ctx.response.type = 'html';
+      ctx.response.body = middleware.devMiddleware.fileSystem.createReadStream(filename);
     });
+    }catch(error){
+      console.error(111,error)
+    }
   }
-  useKoaWebpack(0)
+  useKoaWebpack()
+}else {
+  app.use(async (ctx, next) => {
+    await ctx.render('index');
+    await next();
+  });
 }
 
 if (protocol === 'https') {

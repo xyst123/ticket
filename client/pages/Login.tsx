@@ -9,7 +9,7 @@ interface IProp {
   location:any
 }
 
-const Login=({ history,location}: IProp)=> {
+const Login:React.FC<IProp>=({ history,location})=> {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

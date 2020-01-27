@@ -22,7 +22,7 @@ import { getTime } from "@/utils/others";
 import { seatMap } from '@/config/seat';
 import '@/style/Main.less';
 
-function Main({title, history }: any) {
+const Main:React.FC<any>=({title, history })=> {
   const passengerRef: RefObject<any> = useRef();
   const seatRef: RefObject<any> = useRef();
   const othersRef: RefObject<any> = useRef();

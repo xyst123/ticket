@@ -10,7 +10,7 @@ import '@/style/Ticket.less';
 
 const { CheckboxItem } = Checkbox;
 
-function Ticket({ title,history }: any) {
+const Ticket:React.FC<any>=({ title,history })=> {
   const selectedTickets: Ticket.ITicket[] = getStorage('tickets', '', []);
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');

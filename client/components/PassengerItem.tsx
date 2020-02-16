@@ -6,7 +6,7 @@ interface IProp {
   passenger: Passenger.IPassenger
 }
 
-export default ({ passenger }: IProp) => (
+const PassengerItem = ({ passenger }: IProp) => (
   <div className="passenger-item">
     <div className="passenger-item-avatar">{getFirstName(passenger.passenger_name)}</div>
     <p className="passenger-item-name">{passenger.passenger_name}</p>
@@ -14,3 +14,5 @@ export default ({ passenger }: IProp) => (
     <p className="passenger-item-id">{passenger.passenger_id_no}</p>
   </div>
 )
+
+export default React.memo(PassengerItem);

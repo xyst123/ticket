@@ -169,3 +169,6 @@ export const delay=async <T>(callback:Function,time:number):Promise<T>=>{
   })
   return callback()
 }
+
+const windowWidth = document.compatMode === 'CSS1Compat' ? document.documentElement.clientWidth : document.body.clientWidth;
+export const getVw=(px:number)=>Number((100 * Number(px) / windowWidth).toFixed(3))

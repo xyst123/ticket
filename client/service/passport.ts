@@ -1,5 +1,6 @@
-import { request, get, handleRes, getStorage, setStorage } from "@/utils";
+import { request, get, handleRes, getStorage, setStorage, getType } from "@/utils";
 import validate from "@/utils/validate";
+import pointsRaw from '@/config/points';
 
 export function getCookie() {
   request({
@@ -10,53 +11,14 @@ export function getCookie() {
   });
 }
 
-export const login = async (username: string, password: string): Promise<Common.IRes> => {
+export const getAuthCode = async (): Promise<Common.IRes> => {
   const message = {
     '-1': '登录失败',
     '1': '账号与密码不匹配',
-    '40000': '请填写必要的信息',
+    '50001': '自动登录失败',
   }
 
-  try {
-    const points: { [key: string]: string } = {
-      '1': '37,46',
-      '2': '110,46',
-      '3': '181,46',
-      '4': '253,46',
-      '5': '37,116',
-      '6': '110,116',
-      '7': '181,116',
-      '8': '253,116',
-    }
-
-    const passRes = validate.check([
-      {
-        value: username,
-        rules: [{
-          rule: "isNotEmpty",
-          backData: {
-            message: "请填写12306账号"
-          }
-        }],
-      },
-      {
-        value: password,
-        rules: [{
-          rule: "isNotEmpty",
-          backData: {
-            message: "请填写12306密码"
-          }
-        }],
-      },
-    ])
-
-    if (!passRes.pass) {
-      message['40000'] = get(passRes, "firstError.backData.message", message['40000'])
-      return handleRes({
-        result_code: '40000'
-      }, message)
-    }
-
+  try {    
     const authCodeRes = await request<string>({
       url: '/passport/api/authCode',
       data: {
@@ -90,9 +52,66 @@ export const login = async (username: string, password: string): Promise<Common.
       }
     })
 
-    const matches = positionRes.match(/<b>([1-8\s]+)<\/b>/i) || [];
-    const chosenIndexes = matches[1] || '';
-    const authCodeAnswer = chosenIndexes.split(' ').map(chosenIndex => points[String(chosenIndex)]).join(',');
+    if(getType(positionRes) === 'string'){
+      const matches = positionRes.match(/<b>([1-8\s]+)<\/b>/i) || [];
+      const chosenIndexes = matches[1] || '';
+      const authCodeAnswer = chosenIndexes.split(' ').map(chosenIndex => pointsRaw[String(chosenIndex)]).join(',');
+      return  {
+        ...handleRes({
+          result_code:'0'
+        }, message),
+        data: authCodeAnswer
+      }
+    } else {
+      return {
+        ...handleRes({
+          result_code: '50001'
+        }, message),
+        data: authCode
+      }
+    }
+  } catch (error) {
+    return handleRes(error, message)
+  }
+}
+
+
+export const loginWithAuthCodeAnswer = async (user: User.IUser,authCodeAnswer: string): Promise<Common.IRes> => {
+  const message = {
+    '-1': '登录失败',
+    '1': '账号与密码不匹配',
+    '40000': '请填写必要的信息',
+  }
+
+  try {
+    const passRes = validate.check([
+      {
+        value: user.username,
+        rules: [{
+          rule: "isNotEmpty",
+          backData: {
+            message: "请填写12306账号"
+          }
+        }],
+      },
+      {
+        value: user.password,
+        rules: [{
+          rule: "isNotEmpty",
+          backData: {
+            message: "请填写12306密码"
+          }
+        }],
+      },
+    ])
+
+    if (!passRes.pass) {
+      message['40000'] = get(passRes, "firstError.backData.message", message['40000'])
+      return handleRes({
+        result_code: '40000'
+      }, message)
+    }
+
     const checkAuthCodeAnswerRes = await request<string>({
       url: '/passport/api/checkAuthCodeAnswer',
       data: {
@@ -112,7 +131,9 @@ export const login = async (username: string, password: string): Promise<Common.
       url: '/passport/api/login',
       type: 'form',
       data: {
-        username, password, appid: 'otn', answer: authCodeAnswer
+        ...user,
+        appid: 'otn', 
+        answer: authCodeAnswer
       }
     })
     const checkLoginRes = handleRes(loginRes, message)
@@ -153,21 +174,15 @@ export const login = async (username: string, password: string): Promise<Common.
     if (checkSetTkRes.status) {
       const users: User.IUser[] = getStorage('users') || [];
       let existIndex = -1;
-      users.forEach((user, index: number) => {
-        if (user.username === username) {
+      users.forEach((userItem, index: number) => {
+        if (userItem.username === user.username) {
           existIndex = index
         }
       })
       if (existIndex === -1) {
-        users.push({
-          username,
-          password
-        })
+        users.push(user)
       } else {
-        users.splice(existIndex, 1, {
-          username,
-          password
-        })
+        users.splice(existIndex, 1, user)
       }
       setStorage('users', users)
     }
@@ -184,7 +199,8 @@ export const autoLogin = () => {
   if (!user) return false;
 
   const handleLogin = async (count: number = 3): Promise<boolean> => {
-    const loginRes = await login(user.username, user.password);
+    const getAuthCodeRes = await getAuthCode();
+    const loginRes=getAuthCodeRes.status?await loginWithAuthCodeAnswer(user,getAuthCodeRes.data):getAuthCodeRes
     if (loginRes.status) {
       loginCount = 0
       return true

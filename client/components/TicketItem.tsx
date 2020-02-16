@@ -8,7 +8,7 @@ interface IProp {
   brief?: boolean
 }
 
-export default ({ ticket, brief = false }: IProp)=> {
+const TicketItem = ({ ticket, brief = false }: IProp)=> {
   return brief ?
     (
       <div className="ticket-item__brief">
@@ -52,3 +52,5 @@ export default ({ ticket, brief = false }: IProp)=> {
       </div>
     );
 }
+
+export default React.memo(TicketItem);

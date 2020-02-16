@@ -1,0 +1,27 @@
+@import url(./vars.less);
+
+.mask-auth-code{
+	position: relative;
+  box-sizing: border-box;
+  background-color: #fff;
+  &-image{
+    width:100%;
+	}
+	&-check{
+		position: absolute;
+		font-size: 3vw;
+		color:#fff;
+    text-align: center;
+		background-color: rgba(0,0,0,0.7);
+	}
+  &-buttons{
+    position: fixed;
+    bottom: 8vh;
+    right:10vw;
+    display: flex;
+    .am-button {
+      border-radius: @button-height-small;
+      margin-left: 20px;
+    }
+  }
+}

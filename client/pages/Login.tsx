@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'react-router-dom';
 import { WingBlank, InputItem, Button, Toast } from 'antd-mobile';
-import { getCookie, login } from '@/service/passport';
+import Mask from '@/components/Mask/Mask';
+import AuthCode from '@/components/Mask/AuthCode';
+import { getCookie, getAuthCode, loginWithAuthCodeAnswer } from '@/service/passport';
 import '@/style/Login.less';
 
 interface IProp {
@@ -20,10 +22,9 @@ const Login:React.FC<IProp>=({ history,location})=> {
 
   useEffect(() => {
     (async()=>{
-      if(loading){
-        const loginRes = await login(username, password);
-        setLoading(false);
-        if (loginRes.status) {
+      const handleLoginWithAuthCodeAnswer=async (result:string)=>{
+        const loginWithAuthCodeAnswerRes =await loginWithAuthCodeAnswer({username, password},result);
+        if (loginWithAuthCodeAnswerRes.status) {
           const {redirect}=location.query || {};
           if(redirect){
             history.push(redirect);
@@ -31,8 +32,27 @@ const Login:React.FC<IProp>=({ history,location})=> {
             history.push('/main');
           }
         } else {
-          Toast.fail(loginRes.message, 3)
+          Toast.fail(loginWithAuthCodeAnswerRes.message, 3)
         }
+      }
+      if(loading){
+        const getAuthCodeRes = await getAuthCode();
+        if (getAuthCodeRes.status) {
+          handleLoginWithAuthCodeAnswer(getAuthCodeRes.data)
+        } else {
+          if(getAuthCodeRes.code===50001){
+            // 展示弹框
+            Mask.open((
+              <AuthCode 
+                authCode={getAuthCodeRes.data} 
+                confirmHandler={handleLoginWithAuthCodeAnswer} 
+                closeHandler={Mask.close}></AuthCode>
+            ))
+          }else {
+            Toast.fail(getAuthCodeRes.message, 3)
+          }
+        }
+        setLoading(false);
       }
     })()
   }, [loading]);

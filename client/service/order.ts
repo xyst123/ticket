@@ -9,10 +9,11 @@ interface IAlternateData {
 export const submitAlternate=async (data: IAlternateData):Promise<Common.IRes>=>{
   const message = {
     '-1': '提交候补订单失败',
+    '60001':'未匹配到符合筛选条件的车次'
   }
   try{
     const { selectedTickets, selectedPassengers, selectedSeats } = data;
-    const ticketAndSeats:{ticket:string,seat:string}[]= [];
+    const alternateConfig:{ticket:string,seat:string,time:Date}[]= [];
     selectedTickets.forEach(selectedTicket=>{
       let seat='';
       if(selectedSeats.length){
@@ -32,21 +33,47 @@ export const submitAlternate=async (data: IAlternateData):Promise<Common.IRes>=>
           }
         }
       }
-      if(seat && ticketAndSeats.length<3){
-        ticketAndSeats.push({
+      if(seat && alternateConfig.length<3){
+        const afterDate=new Date(Date.now()+24*60*60*1000*10);
+        const realAfterDate=new Date(
+          afterDate.getFullYear(),
+          afterDate.getMonth(),
+          afterDate.getDate(),
+          23,
+          30
+        );
+        const {date,fromTime}=selectedTicket;
+        const fromDate=new Date(
+          parseInt(date.substring(0,4)),
+          parseInt(date.substring(4,6))-1,
+          parseInt(date.substring(6)),
+          parseInt(fromTime.substring(0,2)),
+          parseInt(fromTime.substring(3))
+        );
+        const realFromDate= new Date(fromDate.getTime()-6*60*60*1000);
+        console.log(realAfterDate,realFromDate)
+        alternateConfig.push({
           ticket:selectedTicket.id,
-          seat
+          seat,
+          time:realAfterDate.getTime()>realFromDate.getTime()?realFromDate:realAfterDate
         })
       }
     })
+
+    if(!alternateConfig.length){
+      return handleRes({
+        result_code: '60001'
+      }, message)
+    }
+
     const submitRes = await request<{ status: boolean }>({
       method: 'POST',
       url: '/otn/api/alternate/confirm',
       type: 'form',
       data: {
         passengerInfo:selectedPassengers.map(selectedPassenger=>`1#${selectedPassenger.passenger_name}#1#${selectedPassenger.passenger_id_no}#${selectedPassenger.allEncStr}#0;`).join(''),
-        jzParam:`${dateFormat(new Date(Date.now()+24*60*60*1000*10),'yyyy-MM-dd')}#23#30`,
-        hbTrain:ticketAndSeats.map(ticketAndSeat=>`${ticketAndSeat.ticket},${ticketAndSeat.seat}#`).join(''),
+        jzParam:dateFormat(alternateConfig[0].time,'yyyy-MM-dd#HH#mm'),
+        hbTrain:alternateConfig.map(ticketAndSeat=>`${ticketAndSeat.ticket},${ticketAndSeat.seat}#`).join(''),
         lkParam:'',
         sessionId:'',
         sig:'',
@@ -78,8 +105,8 @@ export const submitOrder = async (data: IOrderData): Promise<Common.IRes> => {
   const message = {
     '-1': '提交订单失败',
     '40000': '请填写必要的信息',
-    '60000': '您还有未处理的订单',
-    '60001': '当前时间不可以订票'
+    '60001': '您还有未处理的订单',
+    '60002': '当前时间不可以订票'
   }
   try {
     const { tickets, date, passengers, seats } = data;

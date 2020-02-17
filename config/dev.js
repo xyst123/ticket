@@ -150,7 +150,7 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: {
           '^/otn/api/alternate/confirm': '/otn/afterNate/confirmHB',
-        },
+        }
       },
       '/otn/api/alternate/status': {
         target: 'https://kyfw.12306.cn',

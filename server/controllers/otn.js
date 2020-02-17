@@ -4,7 +4,7 @@ const { serverRequest, getIP, resolveFirst } = require('../../utils');
 const getTicketRes = async ({ ip, query, headers, cookie }) => {
 	try {
 		const ticketRes = await serverRequest({
-			url: `https://${ip}/otn/leftTicket/queryZ`,
+			url: `https://${ip}/otn/leftTicket/queryO`,
 			params: query,
 			headers: { ...headers, host: 'kyfw.12306.cn', refer: 'https://kyfw.12306.cn/otn/leftTicket/init', cookie, 'X-Forwarded-For': getIP() }
 		});

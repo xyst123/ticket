@@ -45,7 +45,8 @@ declare namespace Ticket {
 		fromTime: string,
 		toTime: string,
 		duration: string,
-		seats: { [key: string]: string }
+		seats: { [key: string]: string },
+		date:string,
 	}
 }
 

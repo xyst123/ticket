@@ -1,4 +1,4 @@
-import React, { useState,useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Calendar } from 'antd-mobile';
 import zhCN from 'antd-mobile/lib/calendar/locale/zh_CN';
 import { setStorage } from "@/utils";
@@ -6,18 +6,18 @@ import { getDate } from "@/utils/date";
 import '@/style/Date.less';
 
 interface IProp {
-  setShowDate: (showDate: boolean) => void
+  setShowPopup: (showDate: string) => void
 }
-export default ({ setShowDate }: IProp)=> {
+export default ({ setShowPopup }: IProp) => {
   const now = new Date();
   const [currentDate] = useState(getDate());
 
-  const submit =useCallback((date: Date) => {
+  const submit = useCallback((date: Date) => {
     setStorage("config", {
       date: date.getTime()
     })
-    setShowDate(false)
-  },[]) 
+    setShowPopup('')
+  }, [])
 
   return (
     <div className="date-content">

@@ -1,7 +1,7 @@
 import React, { useState, useImperativeHandle, useCallback } from 'react';
 import { List, Checkbox } from 'antd-mobile';
 import { getStorage, setStorage } from "@/utils";
-import { seatMap } from '@/config/seat';
+import { seatMap } from '@/configs/seat';
 import '@/style/Seat.less';
 
 const { CheckboxItem } = Checkbox;
@@ -15,9 +15,9 @@ export default ({ childRef }: IProp) => {
 
 	const [currentSelectedSeats, setCurrentSelectedSeats] = useState([...selectedSeats]);
 
-	const shouldInitialSelect =useCallback((seat: string) => selectedSeats.some(item => item === seat),[]) ;
+	const shouldInitialSelect = useCallback((seat: string) => selectedSeats.some(item => item === seat), []);
 
-	const handleSelect =useCallback((seat: string) => {
+	const handleSelect = useCallback((seat: string) => {
 		let existIndex = -1;
 		currentSelectedSeats.forEach((currentSelectedSeat, index) => {
 			if (currentSelectedSeat === seat) {
@@ -31,7 +31,7 @@ export default ({ childRef }: IProp) => {
 			copyCurrentSelectedSeats.splice(existIndex, 1);
 			setCurrentSelectedSeats(copyCurrentSelectedSeats)
 		}
-	},[currentSelectedSeats]) 
+	}, [currentSelectedSeats])
 
 	useImperativeHandle(childRef, () => currentSelectedSeats);
 

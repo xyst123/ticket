@@ -11,10 +11,10 @@ const characters = characterStations.map(characterStation => characterStation.ch
 
 interface IProp {
   type: Station.TStationType,
-  setShowStation: (showStation: boolean) => void
+  setShowPopup: (showStation: string) => void
 }
 
-export default ({ type, setShowStation }: IProp) => {
+export default ({ type, setShowPopup }: IProp) => {
   const currentStation = getStation(type);
 
   const [shrinks, setShrinks] = useState(characterStations.map(() => true));
@@ -26,7 +26,7 @@ export default ({ type, setShowStation }: IProp) => {
   const submit = useCallback((station: Station.IStation) => {
     setStorage('config', { [`${type}Station`]: station.id });
     setStorage('tickets', []);
-    setShowStation(false)
+    setShowPopup('')
   }, [])
 
   const setShrink = useCallback((index: number) => {
@@ -71,7 +71,7 @@ export default ({ type, setShowStation }: IProp) => {
               <div className={`station-content-item-station ${characterStation.stations.length > 16 && shrinks[index] && 'station-content-item-station__shrink'}`}>
                 {characterStation.stations.map(station => (<Button className={`station-content-item-station-button ${station.id === currentStation.id && 'station-content-item-station-button__active'}`} key={`character-station-${characterStation.character}-${station.id}`} inline size="small" onClick={submit.bind(null, station)}>{station.chinese}</Button>))}
               </div>
-              <p className={`station-content-item-shrink iconfont icon-arrow toggle ${shrinks[index]?'':'toggle-active'}`} onClick={setShrink.bind(null, index)}></p>
+              <p className={`station-content-item-shrink iconfont icon-arrow toggle ${shrinks[index] ? '' : 'toggle-active'}`} onClick={setShrink.bind(null, index)}></p>
             </div>
           ))}
         </div>

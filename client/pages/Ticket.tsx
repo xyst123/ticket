@@ -10,14 +10,36 @@ import '@/style/Ticket.less';
 
 const { CheckboxItem } = Checkbox;
 
-const Ticket:React.FC<any>=({ title,history })=> {
-  const selectedTickets: Ticket.ITicket[] = getStorage('tickets', '', []);
+const useTickets = () => {
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');
   const currentDate = getDate()
-
   const [tickets, setTickets] = useState<Ticket.ITicket[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      Toast.loading('加载中', 0);
+      await (async () => {
+        const getRestTicketsRes = await getRestTickets({
+          'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
+          'leftTicketDTO.from_station': currentFromStation.id,
+          'leftTicketDTO.to_station': currentToStation.id,
+        });
+        if (getRestTicketsRes.status) {
+          setTickets(getRestTicketsRes.data);
+        }
+      })();
+      Toast.hide();
+    })();
+  }, []);
+
+  return tickets
+}
+
+const Ticket: React.FC<any> = ({ title, history }) => {
+  const selectedTickets: Ticket.ITicket[] = getStorage('tickets', '', []);
   const [currentSelectedTickets, setCurrentSelectedTickets] = useState([...selectedTickets]);
+  const tickets = useTickets()
 
   const shouldInitialSelect = useCallback((ticket: Ticket.ITicket) => selectedTickets.some(item => item.train === ticket.train), []);
 
@@ -41,24 +63,6 @@ const Ticket:React.FC<any>=({ title,history })=> {
     setStorage('tickets', currentSelectedTickets);
     history.replace('/main')
   }, [currentSelectedTickets])
-
-  useEffect(() => {
-    (async () => {
-      const handleGetTickets = async () => {
-        const getRestTicketsRes = await getRestTickets({
-          'leftTicketDTO.train_date': dateFormat(currentDate, 'yyyy-MM-dd'),
-          'leftTicketDTO.from_station': currentFromStation.id,
-          'leftTicketDTO.to_station': currentToStation.id,
-        });
-        if (getRestTicketsRes.status) {
-          setTickets(getRestTicketsRes.data);
-        }
-      }
-      Toast.loading('加载中', 0);
-      await handleGetTickets();
-      Toast.hide();
-    })();
-  }, []);
 
   return (
     <div className="ticket">

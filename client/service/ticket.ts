@@ -1,5 +1,5 @@
 import { request } from "@/utils";
-import { ips } from '@/config/ips'
+import { ips } from '@/configs/ips'
 interface IGetRestTicketsData {
   'leftTicketDTO.train_date': string,
   'leftTicketDTO.from_station': string,

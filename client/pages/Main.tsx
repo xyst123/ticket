@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef,useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { withRouter } from 'react-router-dom';
 import { WingBlank, WhiteSpace, NoticeBar, Card, Icon, Button, Modal, NavBar, Tag, Toast } from 'antd-mobile';
 import useConstant from '@/hooks/constant';
@@ -14,32 +14,60 @@ import { getRestTickets } from '@/service/ticket';
 import { getPassengers } from '@/service/passenger';
 import { getUserInfo } from '@/service/user';
 import { autoLogin } from '@/service/passport';
-import {submitAlternate, submitOrder, autoQueryStatus } from '@/service/order';
-import { getStorage, setStorage, dateFormat, getRandom, getFirstName, delay} from '@/utils';
+import { submitAlternate, submitOrder, autoQueryStatus } from '@/service/order';
+import { getStorage, setStorage, dateFormat, getRandom, getFirstName, delay } from '@/utils';
 import { getStation } from '@/utils/station';
 import { getDate } from "@/utils/date";
 import { getTime } from "@/utils/others";
-import { seatMap } from '@/config/seat';
+import { seatMap } from '@/configs/seat';
 import '@/style/Main.less';
 
-const Main:React.FC<any>=({title, history })=> {
+const usePassengersAndUserInfo = (history: any): [Passenger.IPassenger[], UserInfo.IUserInfo] => {
+  const [passengers, setPassengers] = useState<Passenger.IPassenger[]>([]);
+  const [userInfo, setUserInfo] = useState<UserInfo.IUserInfo>({ user_name: "" });
+
+  useEffect(() => {
+    (async () => {
+      const handleGetPassengers = async () => {
+        const [getPassengersRes, getUserInfoRes] = await Promise.all([getPassengers(), getUserInfo()]);
+        if (getPassengersRes.status && getUserInfoRes.status) {
+          setPassengers(getPassengersRes.data);
+          setUserInfo(getUserInfoRes.data)
+        } else {
+          const autoLoginRes = await autoLogin();
+          if (autoLoginRes) {
+            await handleGetPassengers()
+          } else {
+            history.push({
+              pathname: '/login',
+              query: { redirect: '/main' }
+            })
+          }
+        }
+      }
+      Toast.loading('加载中', 0);
+      await handleGetPassengers();
+      Toast.hide();
+    })()
+  }, []);
+
+  return [passengers, userInfo]
+}
+
+const Main: React.FC<any> = ({ title, history }) => {
   const passengerRef: RefObject<any> = useRef();
   const seatRef: RefObject<any> = useRef();
   const othersRef: RefObject<any> = useRef();
   const requireCountRef: RefObject<number> = useRef(0);
   const [timer, getTimerConstant, setTimer] = useConstant<any>(null);
   const [shouldRequire, getShouldRequireConstant, setShouldRequire] = useConstant(false);
+  const [passengers, userInfo] = usePassengersAndUserInfo(history);
   const [selectedTickets, setSelectedTickets] = useLocalStorage<Ticket.ITicket[]>('tickets', '', []);
-  const [selectedPassengerIds,setSelectedPassengerIds] = useLocalStorage<string[]>('passengers', '', []); 
-  const [selectedSeats, setSelectedSeats] = useLocalStorage<string[]>('seats', '', []); 
-  const [showPassenger, setShowPassenger] = useState(false);
-  const [showOthers, setShowOthers] = useState(false);
-  const [showSeat, setShowSeat] = useState(false);
-  const [showStation, setShowStation] = useState(false);
-  const [showDate, setShowDate] = useState(false);
+  const [selectedPassengerIds, setSelectedPassengerIds] = useLocalStorage<string[]>('passengers', '', []);
+  const [selectedSeats, setSelectedSeats] = useLocalStorage<string[]>('seats', '', []);
+  const [showPopup, setShowPopup] = useState('');
+
   const [currentStationType, setCurrentStationType] = useState<Station.TStationType>('from');
-  const [passengers, setPassengers] = useState<Passenger.IPassenger[]>([]);
-  const [userInfo, setUserInfo] = useState<UserInfo.IUserInfo>({ user_name: "" });
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [hasSubmit, setHasSubmit] = useState(false);
@@ -53,12 +81,13 @@ const Main:React.FC<any>=({title, history })=> {
       onPress: (...args: any[]) => void | Promise<any>
     }[]
   }
-  const [modal, setModal] = useState<IModal>({
+  const defaultModal = {
     visible: false,
     title: '',
     text: '',
     footer: []
-  });
+  };
+  const [modal, setModal] = useState<IModal>(defaultModal);
 
   const currentFromStation = getStation('from');
   const currentToStation = getStation('to');
@@ -70,11 +99,11 @@ const Main:React.FC<any>=({title, history })=> {
     3));
 
   // 衍生值
-  const selectedPassengers=useMemo(()=>passengers.filter(passenger => selectedPassengerIds.includes(passenger.allEncStr)),[passengers,selectedPassengerIds]);
+  const selectedPassengers = useMemo(() => passengers.filter(passenger => selectedPassengerIds.includes(passenger.allEncStr)), [passengers, selectedPassengerIds]);
 
   const handleShowStation = useCallback((type: Station.TStationType) => {
     setCurrentStationType(type);
-    setShowStation(true)
+    setShowPopup('station')
   }, []);
 
   const switchStations = useCallback(() => {
@@ -82,13 +111,6 @@ const Main:React.FC<any>=({title, history })=> {
     setSelectedTickets('tickets', [])
     setSwitchCount(switchCount + 1)
   }, [switchCount])
-
-  const closeModal = useCallback(() => {
-    setModal({
-      ...modal,
-      visible: false
-    })
-  }, [modal])
 
   const getIps = useCallback((number: number): string[] => {
     const ips = [];
@@ -115,9 +137,9 @@ const Main:React.FC<any>=({title, history })=> {
     setMessage(getShouldRequireConstant() ? message : '')
   }, [shouldRequire]);
 
-  const showError=useCallback((type:string)=>{
+  const showError = useCallback((type: string) => {
     return hasSubmit && errors[type]
-  },[hasSubmit,errors])
+  }, [hasSubmit, errors])
 
   const toggleExecute = useCallback(() => {
     if (timer) {
@@ -127,7 +149,7 @@ const Main:React.FC<any>=({title, history })=> {
       setHasSubmit(true);
       if (shouldRequire) {
         setShouldRequire(false)
-      } else if(Object.values(errors).every(item=>!item)){
+      } else if (Object.values(errors).every(item => !item)) {
         const gap = time.getTime() - Date.now();
         if (gap > 0) {
           setTimer(setTimeout(() => {
@@ -139,23 +161,23 @@ const Main:React.FC<any>=({title, history })=> {
         }
       }
     }
-  }, [timer, shouldRequire,errors]);
+  }, [timer, shouldRequire, errors]);
 
   const autoGetRestTicketsRes = useCallback(() => {
-    const handleSubmitAlternateRes=async (selectedTickets:Ticket.ITicket[]): Promise<any> => {
+    const handleSubmitAlternateRes = async (selectedTickets: Ticket.ITicket[]): Promise<any> => {
       handleSetMessage(`正在添加候补订单`);
-      const submitAlternateRes=await submitAlternate({
+      const submitAlternateRes = await submitAlternate({
         selectedTickets,
         selectedPassengers,
         selectedSeats
       });
       const { status } = submitAlternateRes;
-      if(status){
+      if (status) {
         handleSetMessage(`添加候补订单成功，请到订单列表查看`);
-      }else {
+      } else {
         handleSetMessage(`添加候补订单失败`);
       }
-      return delay(handleGetRestTicketsRes,period * 1000)
+      return delay(handleGetRestTicketsRes, period * 1000)
     }
 
     const handleGetRestTicketsRes = async (): Promise<any[]> => {
@@ -175,38 +197,13 @@ const Main:React.FC<any>=({title, history })=> {
         if (status) {
           return data;
         } else {
-         return delay(requireCountRef.current===1 && alternate?handleSubmitAlternateRes.bind(null,data):handleGetRestTicketsRes,period * 1000)
+          return delay(requireCountRef.current === 1 && alternate ? handleSubmitAlternateRes.bind(null, data) : handleGetRestTicketsRes, period * 1000)
         }
       }
     };
 
     return handleGetRestTicketsRes()
   }, [selectedPassengers])
-
-  useEffect(() => {
-    (async () => {
-      const handleGetPassengers = async () => {
-        const [getPassengersRes, getUserInfoRes] = await Promise.all([getPassengers(), getUserInfo()]);
-        if (getPassengersRes.status && getUserInfoRes.status) {
-          setPassengers(getPassengersRes.data);
-          setUserInfo(getUserInfoRes.data)
-        } else {
-          const autoLoginRes = await autoLogin();
-          if (autoLoginRes) {
-            await handleGetPassengers()
-          } else {
-            history.push({
-              pathname: '/login',
-              query: { redirect: '/main' }
-            })
-          }
-        }
-      }
-      Toast.loading('加载中', 0);
-      await handleGetPassengers();
-      Toast.hide();
-    })()
-  }, []);
 
   useEffect(() => {
     const stopCodes: { [key: number]: boolean } = {
@@ -246,7 +243,7 @@ const Main:React.FC<any>=({title, history })=> {
                 text: submitOrderRes.message,
                 footer: [{
                   text: '确定',
-                  onPress: closeModal
+                  onPress: () => { setModal(defaultModal) }
                 }]
               });
             } else {
@@ -264,7 +261,7 @@ const Main:React.FC<any>=({title, history })=> {
             footer: [{
               text: '确定',
               onPress: () => {
-                closeModal();
+                setModal(defaultModal);
                 setTimer(setTimeout(() => {
                   setShouldRequire(true)
                   setTimer(null)
@@ -273,7 +270,7 @@ const Main:React.FC<any>=({title, history })=> {
             }, {
               text: '取消',
               onPress: () => {
-                closeModal()
+                setModal(defaultModal)
               }
             }]
           });
@@ -293,7 +290,7 @@ const Main:React.FC<any>=({title, history })=> {
       selectedPassengers: !selectedPassengers.length,
       selectedSeats: !selectedSeats.length
     })
-  }, [selectedTickets, passengers,selectedPassengerIds, selectedSeats]);
+  }, [selectedTickets, passengers, selectedPassengerIds, selectedSeats]);
 
   return (
     <div>
@@ -302,7 +299,7 @@ const Main:React.FC<any>=({title, history })=> {
           mode="dark"
           icon={<Icon type="left" onClick={() => { history.push('/login') }} />}
           rightContent={[
-            <div key="username" className="main-header-username" onClick={()=>{history.push('/login')}}>{getFirstName(userInfo.user_name)}</div>,
+            <div key="username" className="main-header-username" onClick={() => { history.push('/login') }}>{getFirstName(userInfo.user_name)}</div>,
           ]}
         >
           {title}
@@ -329,39 +326,39 @@ const Main:React.FC<any>=({title, history })=> {
               <span className="iconfont icon-switch" style={{ transform: `rotate(${switchCount * 180}deg)` }} onClick={switchStations}></span>
               <h3 onClick={handleShowStation.bind(null, 'to')}>{currentToStation.chinese || '目的地'}</h3>
             </div>
-            <p className="main-body-ticket-date" onClick={setShowDate.bind(null, true)}>{dateFormat(currentDate, 'yyyy-MM-dd')}</p>
+            <p className="main-body-ticket-date" onClick={setShowPopup.bind(null, 'date')}>{dateFormat(currentDate, 'yyyy-MM-dd')}</p>
             {selectedTickets.length > 0 ? selectedTickets.map(selectedTicket => (<TicketItem key={`ticket-${selectedTicket.id}`} ticket={selectedTicket} brief />)) : <p className={showError('selectedTickets') ? "error-text" : "placeholder"}>请选择车次</p>}
           </Card.Body>
         </Card>
         <Modal
           popup
-          visible={showStation}
-          onClose={setShowStation.bind(null, false)}
+          visible={showPopup === 'station'}
+          onClose={setShowPopup.bind(null, '')}
           animationType="slide-up"
         >
           <NavBar
             className="modal-header"
             mode="dark"
-            icon={<Icon type="cross" onClick={setShowStation.bind(null, false)} />}
+            icon={<Icon type="cross" onClick={setShowPopup.bind(null, '')} />}
           >
             {`选择${currentStationType === 'to' ? '目的' : '出发'}地`}
           </NavBar>
-          <Station type={currentStationType} setShowStation={setShowStation} />
+          <Station type={currentStationType} setShowPopup={setShowPopup} />
         </Modal>
         <Modal
           popup
-          visible={showDate}
-          onClose={setShowDate.bind(null, false)}
+          visible={showPopup === 'date'}
+          onClose={setShowPopup.bind(null, '')}
           animationType="slide-up"
         >
           <NavBar
             className="modal-header"
             mode="dark"
-            icon={<Icon type="cross" onClick={setShowDate.bind(null, false)} />}
+            icon={<Icon type="cross" onClick={setShowPopup.bind(null, '')} />}
           >
             选择日期
-        </NavBar>
-          <TicketDate setShowDate={setShowDate} />
+          </NavBar>
+          <TicketDate setShowPopup={setShowPopup} />
         </Modal>
 
         <WhiteSpace size="lg" />
@@ -372,7 +369,7 @@ const Main:React.FC<any>=({title, history })=> {
             thumb="/images/main/passenger.svg"
             extra={<Icon type="right" />}
             // @ts-ignore
-            onClick={() => setShowPassenger(true)}
+            onClick={() => setShowPopup('passenger')}
           />
           <Card.Body className="main-body-passenger">
             {selectedPassengers.length > 0 ? selectedPassengers.map(passenger => (<PassengerItem key={`passenger-${passenger.allEncStr}`} passenger={passenger} />)) : <p className={showError('selectedPassengers') ? "error-text" : "placeholder"}>请选择乘车人</p>}
@@ -380,17 +377,18 @@ const Main:React.FC<any>=({title, history })=> {
         </Card>
         <Modal
           popup
-          visible={showPassenger}
-          onClose={setShowPassenger.bind(null, false)}
+          visible={showPopup === 'passenger'}
+          onClose={setShowPopup.bind(null, '')}
           animationType="slide-up"
         >
           <NavBar
             className="modal-header"
             mode="dark"
-            icon={<Icon type="cross" onClick={() => setShowPassenger(false)} />}
+            icon={<Icon type="cross" onClick={setShowPopup.bind(null, '')} />}
             rightContent={[
-              <p key="finish" onClick={() => { 
-                setSelectedPassengerIds('passengers',passengerRef.current); setShowPassenger(false) }}>完成</p>,
+              <p key="finish" onClick={() => {
+                setSelectedPassengerIds('passengers', passengerRef.current); setShowPopup('')
+              }}>完成</p>,
             ]}
           >
             选择乘车人
@@ -406,7 +404,7 @@ const Main:React.FC<any>=({title, history })=> {
             thumb="/images/main/seat.svg"
             extra={<Icon type="right" />}
             // @ts-ignore
-            onClick={() => setShowSeat(true)}
+            onClick={() => setShowPopup('seat')}
           />
           <Card.Body>
             {selectedSeats.length > 0 ? selectedSeats.map(seat => (<Tag key={`seat-${seat}`} className="main-body-seat-item">{seatMap[seat]}</Tag>)) : <p className={showError('selectedSeats') ? "error-text" : "placeholder"}>请选择席别</p>}
@@ -414,16 +412,16 @@ const Main:React.FC<any>=({title, history })=> {
         </Card>
         <Modal
           popup
-          visible={showSeat}
-          onClose={setShowSeat.bind(null, false)}
+          visible={showPopup === 'seat'}
+          onClose={setShowPopup.bind(null, '')}
           animationType="slide-up"
         >
           <NavBar
             className="modal-header"
             mode="dark"
-            icon={<Icon type="cross" onClick={() => setShowSeat(false)} />}
+            icon={<Icon type="cross" onClick={setShowPopup.bind(null, '')} />}
             rightContent={[
-              <p key="finish" onClick={() => { setSelectedSeats('seats',seatRef.current); setShowSeat(false) }}>完成</p>,
+              <p key="finish" onClick={() => { setSelectedSeats('seats', seatRef.current); setShowPopup('') }}>完成</p>,
             ]}
           >
             选择席别
@@ -439,11 +437,11 @@ const Main:React.FC<any>=({title, history })=> {
             thumb="/images/main/others.svg"
             extra={<Icon type="right" />}
             // @ts-ignore
-            onClick={() => setShowOthers(true)}
+            onClick={() => setShowPopup('others')}
           />
           <Card.Body>
             <ul className="main-body-others">
-              <li>候补优先：{alternate?'是':'否'}</li>
+              <li>候补优先：{alternate ? '是' : '否'}</li>
               <li>查询余票周期：{period}秒</li>
               <li>每次请求ip数：{ipNumber}</li>
               <li>抢票开始时间：{dateFormat(time, 'yyyy-MM-dd HH:mm')}</li>
@@ -453,16 +451,16 @@ const Main:React.FC<any>=({title, history })=> {
 
         <Modal
           popup
-          visible={showOthers}
-          onClose={setShowOthers.bind(null, false)}
+          visible={showPopup === 'others'}
+          onClose={setShowPopup.bind(null, '')}
           animationType="slide-up"
         >
           <NavBar
             className="modal-header"
             mode="dark"
-            icon={<Icon type="cross" onClick={setShowOthers.bind(null, false)} />}
+            icon={<Icon type="cross" onClick={setShowPopup.bind(null, '')} />}
             rightContent={[
-              <p key="finish" onClick={() => { othersRef.current.submit(); setShowOthers(false) }}>完成</p>,
+              <p key="finish" onClick={() => { othersRef.current.submit(); setShowPopup('') }}>完成</p>,
             ]}
           >
             选择其他配置
@@ -477,7 +475,7 @@ const Main:React.FC<any>=({title, history })=> {
       <Modal
         visible={modal.visible}
         transparent
-        onClose={closeModal}
+        onClose={() => { setModal(defaultModal) }}
         title={modal.title}
         footer={modal.footer}
       >

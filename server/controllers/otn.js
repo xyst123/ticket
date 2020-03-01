@@ -4,7 +4,7 @@ const { serverRequest, getIP, resolveFirst } = require('../../utils');
 const getTicketRes = async ({ ip, query, headers, cookie }) => {
 	try {
 		const ticketRes = await serverRequest({
-			url: `https://${ip}/otn/leftTicket/queryO`,
+			url: `https://${ip}/otn/leftTicket/query`,
 			params: query,
 			headers: { ...headers, host: 'kyfw.12306.cn', refer: 'https://kyfw.12306.cn/otn/leftTicket/init', cookie, 'X-Forwarded-For': getIP() }
 		});
@@ -60,20 +60,20 @@ const handleTicketRes = (ticketRes) => {
 	return []
 }
 
-const getMatchedTickets = (tickets, selectedTickets, selectedSeats) =>{
-	const matchedTickets=[];
-	const alternateTickets=[];
+const getMatchedTickets = (tickets, selectedTickets, selectedSeats) => {
+	const matchedTickets = [];
+	const alternateTickets = [];
 	tickets.forEach(ticket => {
 		const ticketFit = selectedTickets.some(selectedTicket => selectedTicket === ticket.id);
-		const seatFit =selectedSeats.some(selectedSeat => {
+		const seatFit = selectedSeats.some(selectedSeat => {
 			const rest = ticket.seats[selectedSeat];
 			return rest && rest !== '无' && rest !== '*'
 		});
 
-		if(ticketFit && seatFit){
+		if (ticketFit && seatFit) {
 			matchedTickets.push(ticket)
 		}
-		if(ticketFit && !seatFit){
+		if (ticketFit && !seatFit) {
 			alternateTickets.push(ticket)
 		}
 	})
@@ -128,7 +128,7 @@ router.get('/restTickets', async (ctx) => {
 					code = 60000;
 					resolve([])
 				}
-				const {matchedTickets,alternateTickets} = getMatchedTickets(tickets, selectedTickets, selectedSeats);
+				const { matchedTickets, alternateTickets } = getMatchedTickets(tickets, selectedTickets, selectedSeats);
 
 				if (matchedTickets.length) {
 					resolve(matchedTickets)

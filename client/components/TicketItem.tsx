@@ -1,6 +1,6 @@
 import React from 'react';
-import { seatMap } from '@/config/seat';
-import {getCrossDays} from '@/utils/ticket';
+import { seatMap } from '@/configs/seat';
+import { getCrossDays } from '@/utils/ticket';
 import '@/style/TicketItem.less';
 
 interface IProp {
@@ -8,7 +8,7 @@ interface IProp {
   brief?: boolean
 }
 
-const TicketItem = ({ ticket, brief = false }: IProp)=> {
+const TicketItem = ({ ticket, brief = false }: IProp) => {
   return brief ?
     (
       <div className="ticket-item__brief">
@@ -30,7 +30,7 @@ const TicketItem = ({ ticket, brief = false }: IProp)=> {
             <p>{ticket.train}</p>
           </div>
           <div className="ticket-item-station ticket-item-station__right">
-            <p className="ticket-item-station-time">{ticket.toTime}<span>{getCrossDays(ticket.fromTime,ticket.duration)}</span></p>
+            <p className="ticket-item-station-time">{ticket.toTime}<span>{getCrossDays(ticket.fromTime, ticket.duration)}</span></p>
             <p className="ticket-item-station-name">{ticket.toName}</p>
           </div>
         </div>
@@ -47,7 +47,7 @@ const TicketItem = ({ ticket, brief = false }: IProp)=> {
           ))}
         </div>
         {
-          ticket.saleTime?(<p className="ticket-item-sale-time">{ticket.saleTime}</p>):''
+          ticket.saleTime ? (<p className="ticket-item-sale-time">{ticket.saleTime}</p>) : ''
         }
       </div>
     );

@@ -1,6 +1,6 @@
 import { request, get, handleRes, getStorage, setStorage, getType } from "@/utils";
 import validate from "@/utils/validate";
-import pointsRaw from '@/config/points';
+import pointsRaw from '@/configs/points';
 
 export function getCookie() {
   request({
@@ -18,7 +18,7 @@ export const getAuthCode = async (): Promise<Common.IRes> => {
     '50001': '自动登录失败',
   }
 
-  try {    
+  try {
     const authCodeRes = await request<string>({
       url: '/passport/api/authCode',
       data: {
@@ -52,13 +52,13 @@ export const getAuthCode = async (): Promise<Common.IRes> => {
       }
     })
 
-    if(getType(positionRes) === 'string'){
+    if (getType(positionRes) === 'string') {
       const matches = positionRes.match(/<b>([1-8\s]+)<\/b>/i) || [];
       const chosenIndexes = matches[1] || '';
       const authCodeAnswer = chosenIndexes.split(' ').map(chosenIndex => pointsRaw[String(chosenIndex)]).join(',');
-      return  {
+      return {
         ...handleRes({
-          result_code:'0'
+          result_code: '0'
         }, message),
         data: authCodeAnswer
       }
@@ -76,7 +76,7 @@ export const getAuthCode = async (): Promise<Common.IRes> => {
 }
 
 
-export const loginWithAuthCodeAnswer = async (user: User.IUser,authCodeAnswer: string): Promise<Common.IRes> => {
+export const loginWithAuthCodeAnswer = async (user: User.IUser, authCodeAnswer: string): Promise<Common.IRes> => {
   const message = {
     '-1': '登录失败',
     '1': '账号与密码不匹配',
@@ -132,7 +132,7 @@ export const loginWithAuthCodeAnswer = async (user: User.IUser,authCodeAnswer: s
       type: 'form',
       data: {
         ...user,
-        appid: 'otn', 
+        appid: 'otn',
         answer: authCodeAnswer
       }
     })
@@ -200,7 +200,7 @@ export const autoLogin = () => {
 
   const handleLogin = async (count: number = 3): Promise<boolean> => {
     const getAuthCodeRes = await getAuthCode();
-    const loginRes=getAuthCodeRes.status?await loginWithAuthCodeAnswer(user,getAuthCodeRes.data):getAuthCodeRes
+    const loginRes = getAuthCodeRes.status ? await loginWithAuthCodeAnswer(user, getAuthCodeRes.data) : getAuthCodeRes
     if (loginRes.status) {
       loginCount = 0
       return true

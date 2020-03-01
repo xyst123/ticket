@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "dll": "webpack --config build/webpack.dll.config.js",
-    "start": "cross-env NODE_ENV=dev webpack-dev-server --config build/webpack.dev.js",
     "dev": "cross-env NODE_ENV=dev nodemon server",
     "test": "rimraf dist && cross-env NODE_ENV=test webpack --config build/webpack.main.config.js --progress --hide-modules"
   },

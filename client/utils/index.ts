@@ -65,13 +65,22 @@ export const request = <T>({
     params: realParams,
     headers
   };
-  return new Promise((resolve) => {
+
+  let abort = null;
+  const promise = new Promise<T>((resolve) => {
+    abort = () => {
+      resolve((new Error('abort') as any))
+    }
     axios(options).then((res) => {
       resolve(res.data);
     }).catch((error) => {
       resolve(error);
     });
   });
+  // @ts-ignore
+  promise.abort = abort;
+
+  return promise
 };
 
 interface IHandleResRes {
@@ -163,7 +172,7 @@ export const getRandom = (from: number, to: number): number => {
   return parseInt(String(from + (to - from) * Math.random()), 10)
 }
 
-export const delay=async <T>(callback:Function,time:number):Promise<T>=>{
+export const delay = async <T>(callback: Function, time: number): Promise<T> => {
   await new Promise(resolve => {
     setTimeout(() => { resolve() }, time)
   })
@@ -171,4 +180,4 @@ export const delay=async <T>(callback:Function,time:number):Promise<T>=>{
 }
 
 const windowWidth = document.compatMode === 'CSS1Compat' ? document.documentElement.clientWidth : document.body.clientWidth;
-export const getVw=(px:number)=>Number((100 * Number(px) / windowWidth).toFixed(3))
+export const getVw = (px: number) => Number((100 * Number(px) / windowWidth).toFixed(3))

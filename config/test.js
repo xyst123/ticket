@@ -1,4 +1,5 @@
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
+const proxy=require('./proxy');
 
 module.exports = {
   webpack: {
@@ -12,15 +13,7 @@ module.exports = {
     protocol: 'http',
     port: 3001,
     enableStaticCache: true,
-    proxy: {
-      '/wrj': {
-        target: 'http://wrj.sohu.com',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/wrj': '',
-        },
-      },
-    },
+    proxy
   },
   build: {
     extract: false,
